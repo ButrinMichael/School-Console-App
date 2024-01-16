@@ -8,10 +8,11 @@ import java.util.stream.Collectors;
 public class RaceManagerApp {
 
 	public static void main(String[] args) throws IOException {
-
-		Map<String, String[]> abbreviationsMap = DataLoader
+		DataLoader dataLoader = new DataLoader();
+		F1QualificationFormatter f1QualificationFormatter = new F1QualificationFormatter(); 
+		Map<String, String[]> abbreviationsMap = dataLoader
 				.loadAbbreviationsMap("src/main/resources/abbreviations.txt");
-		Map<String, Long> finishingTimeMap = DataLoader.loadTimeDifferenceMap("src/main/resources/start.log",
+		Map<String, Long> finishingTimeMap = dataLoader.loadTimeDifferenceMap("src/main/resources/start.log",
 				"src/main/resources/end.log");
 
 		List<Racer> racers = finishingTimeMap.entrySet().stream().map(entry -> {
@@ -23,8 +24,9 @@ public class RaceManagerApp {
 
 			return new Racer(name, teamName, resultTime);
 		}).sorted().collect(Collectors.toList());
-
-		F1QualificationFormatter.printQualificationReport(racers);
+		
+System.out.println(f1QualificationFormatter.formatQualificationReport(racers));
+		
 
 	}
 }

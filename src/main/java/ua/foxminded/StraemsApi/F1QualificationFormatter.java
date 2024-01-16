@@ -3,39 +3,41 @@ package ua.foxminded.StraemsApi;
 import java.util.List;
 
 public class F1QualificationFormatter {
-	public static void printQualificationReport(List<Racer> racers) {
 
+	public String formatQualificationReport(List<Racer> racers) {
+		StringBuilder result = new StringBuilder();
 		int topRacersCount = 15;
 
-		for (int i = 0; i < topRacersCount; i++) {
-			Racer racer = racers.get(i);
-			printRacerInfo(i + 1, racer, calculatemaxNameLength(racers), calculatemaxTeamLength(racers));
-		}
-		printSeparatorLine(racers);
+		int maxNameLength = calculateMaxNameLength(racers);
+		int maxTeamNameLength = calculateMaxTeamLength(racers);
 
-		for (int i = topRacersCount; i < racers.size(); i++) {
-			Racer racer = racers.get(i);
-			printRacerInfo(i + 1, racer, calculatemaxNameLength(racers), calculatemaxTeamLength(racers));
-		}
+		racers.stream().limit(topRacersCount).forEachOrdered(
+				racer -> appendRacerInfo(result, racers.indexOf(racer) + 1, racer, maxNameLength, maxTeamNameLength));
+
+		appendSeparatorLine(result, maxNameLength, maxTeamNameLength);
+
+		racers.stream().skip(topRacersCount).forEachOrdered(racer -> appendRacerInfo(result,
+				racers.indexOf(racer) + topRacersCount + 1, racer, maxNameLength, maxTeamNameLength));
+
+		return result.toString();
 	}
 
-	private static void printRacerInfo(int position, Racer racer, int maxNameLength, int maxTeamNameLength) {
+	private void appendRacerInfo(StringBuilder result, int position, Racer racer, int maxNameLength,
+			int maxTeamNameLength) {
 		String positionString = (position <= 9) ? position + ". " : position + ".";
-		System.out.printf("%-3s %-" + maxNameLength + "s | %-" + maxTeamNameLength + "s | %s\n", positionString,
-				racer.getName(), racer.getTeamName(), FormatDuration.formatDuration(racer.getResultTime()));
+		result.append(String.format("%-3s %-" + maxNameLength + "s | %-" + maxTeamNameLength + "s | %s\n",
+				positionString, racer.getName(), racer.getTeamName(), formatDuration(racer.getResultTime())));
 	}
 
-	public static int calculatemaxTeamLength(List<Racer> racers) {
+	private int calculateMaxTeamLength(List<Racer> racers) {
 		return racers.stream().mapToInt(racer -> racer.getTeamName().length()).max().orElse(0);
 	}
 
-	public static int calculatemaxNameLength(List<Racer> racers) {
+	private int calculateMaxNameLength(List<Racer> racers) {
 		return racers.stream().mapToInt(racer -> racer.getName().length()).max().orElse(0);
 	}
 
-	private static void printSeparatorLine(List<Racer> racers) {
-		int maxNameLength = calculatemaxNameLength(racers);
-		int maxTeamNameLength = calculatemaxTeamLength(racers);
+	private void appendSeparatorLine(StringBuilder result, int maxNameLength, int maxTeamNameLength) {
 		int lineLength = calculateLineLength(new Racer("", "", 0), maxNameLength, maxTeamNameLength);
 
 		StringBuilder separatorLine = new StringBuilder();
@@ -43,11 +45,18 @@ public class F1QualificationFormatter {
 			separatorLine.append("-");
 		}
 
-		System.out.println(separatorLine.toString());
+		result.append(separatorLine.toString()).append("\n");
 	}
 
-	private static int calculateLineLength(Racer racer, int maxNameLength, int maxTeamNameLength) {
+	private int calculateLineLength(Racer racer, int maxNameLength, int maxTeamNameLength) {
 		return String.format("%-3d %-" + maxNameLength + "s | %-" + maxTeamNameLength + "s | %s", 1, racer.getName(),
-				racer.getTeamName(), FormatDuration.formatDuration(racer.getResultTime())).length();
+				racer.getTeamName(), formatDuration(racer.getResultTime())).length();
+	}
+
+	private String formatDuration(long milliseconds) {
+		long minutes = (milliseconds % (60 * 60 * 1000)) / (60 * 1000);
+		long seconds = (milliseconds % (60 * 1000)) / 1000;
+		long millis = milliseconds % 1000;
+		return String.format("%02d:%02d.%03d", minutes, seconds, millis);
 	}
 }
