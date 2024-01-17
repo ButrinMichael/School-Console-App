@@ -9,7 +9,7 @@ public class RaceManagerApp {
 
 	public static void main(String[] args) throws IOException {
 		DataLoader dataLoader = new DataLoader();
-		F1QualificationFormatter f1QualificationFormatter = new F1QualificationFormatter(); 
+		F1QualificationFormatter f1QualificationFormatter = new F1QualificationFormatter();
 		Map<String, String[]> abbreviationsMap = dataLoader
 				.loadAbbreviationsMap("src/main/resources/abbreviations.txt");
 		Map<String, Long> finishingTimeMap = dataLoader.loadTimeDifferenceMap("src/main/resources/start.log",
@@ -24,9 +24,8 @@ public class RaceManagerApp {
 
 			return new Racer(name, teamName, resultTime);
 		}).sorted().collect(Collectors.toList());
-		
-System.out.println(f1QualificationFormatter.formatQualificationReport(racers));
-		
+
+		System.out.println(f1QualificationFormatter.formatQualificationReport(racers));
 
 	}
 }
