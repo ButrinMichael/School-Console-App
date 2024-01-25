@@ -4,36 +4,44 @@ import java.util.List;
 
 public class F1QualificationFormatter {
 
-    public String formatQualificationReport(List<Racer> racers) {
-        StringBuilder result = new StringBuilder();
-        int topRacersCount = 15;
+	private List<Racer> racers;
 
-        racers.stream().limit(topRacersCount)
-                .forEachOrdered(racer -> appendRacerInfo(result, racers.indexOf(racer) + 1, racer));
+	public String formatQualificationReport(List<Racer> racers) {
+		this.racers = racers;
 
-        appendSeparatorLine(result);
+		StringBuilder result = new StringBuilder();
+		int topRacersCount = 15;
+		racers.stream().limit(topRacersCount)
+				.forEachOrdered(racer -> appendRacerInfo(result, racers.indexOf(racer)));
 
-        racers.stream().skip(topRacersCount)
-                .forEachOrdered(racer -> appendRacerInfo(result, racers.indexOf(racer) + 1, racer));
+		appendSeparatorLine(result);
 
-        return result.toString();
-    }
+		racers.stream().skip(topRacersCount)
+				.forEachOrdered(racer -> appendRacerInfo(result, racers.indexOf(racer) + 1));
 
-    private void appendRacerInfo(StringBuilder result, int position, Racer racer) {
-        String positionString = (position <= 9) ? position + ". " : position + ".";
-        String format = "%-3s %-20s | %-30s | %s\n";
-        result.append(String.format(format, positionString, racer.getName(), racer.getTeamName(), formatDuration(racer.getResultTime())));
-    }
+		return result.toString();
 
-    private void appendSeparatorLine(StringBuilder result) {
-        String format = "%s\n";
-        result.append(String.format(format, "_".repeat(69)));  
-    }
+	}
 
-    private String formatDuration(long milliseconds) {
-        long minutes = (milliseconds % (60 * 60 * 1000)) / (60 * 1000);
-        long seconds = (milliseconds % (60 * 1000)) / 1000;
-        long millis = milliseconds % 1000;
-        return String.format("%02d:%02d.%03d", minutes, seconds, millis);
-    }
+	private void appendRacerInfo(StringBuilder result, int position) {
+		if (position < racers.size()) {
+			Racer racer = racers.get(position);
+			String positionString = (position + 1 <= 9) ? (position + 1) + ". " : (position + 1) + ".";
+			String format = "%-3s %-20s | %-30s | %s\n";
+			result.append(String.format(format, positionString, racer.getName(), racer.getTeamName(),
+					formatDuration(racer.getResultTime())));
+		}
+	}
+
+	private void appendSeparatorLine(StringBuilder result) {
+		String format = "%s\n";
+		result.append(String.format(format, "_".repeat(62))); // Assuming a fixed line length
+	}
+
+	private String formatDuration(long milliseconds) {
+		long minutes = (milliseconds % (60 * 60 * 1000)) / (60 * 1000);
+		long seconds = (milliseconds % (60 * 1000)) / 1000;
+		long millis = milliseconds % 1000;
+		return String.format("%02d:%02d.%03d", minutes, seconds, millis);
+	}
 }

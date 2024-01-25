@@ -27,5 +27,6 @@ public class RaceManagerApp {
 
 		System.out.println(f1QualificationFormatter.formatQualificationReport(racers));
 
+		
 	}
 }

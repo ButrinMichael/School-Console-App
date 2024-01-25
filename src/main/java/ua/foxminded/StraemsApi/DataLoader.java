@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
 
 public class DataLoader {
-    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd_HH:mm:ss.SSS";
+    private static final String dataTimePattern = "yyyy-MM-dd_HH:mm:ss.SSS";
 
     public Map<String, String[]> loadAbbreviationsMap(String filePath) throws IOException {
         try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
@@ -21,21 +21,26 @@ public class DataLoader {
     }
 
     public Map<String, Long> loadTimeDifferenceMap(String startFilePath, String endFilePath) throws IOException {
-        try (Stream<String> lines = Stream.concat(Files.lines(Paths.get(startFilePath)),
-                Files.lines(Paths.get(endFilePath)))) {
-            return lines.collect(
-                    Collectors.groupingBy(line -> line.substring(0, 3),
-                            Collectors.collectingAndThen(
-                                    Collectors.mapping(line -> LocalDateTime.parse(line.substring(3),
-                                            DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)),
-                                            Collectors.toList()),
-                                    list -> {
-                                        if (list.size() == 2) {
-                                            return Duration.between(list.get(0), list.get(1)).toMillis();
-                                        } else {
-                                            return 0L;
-                                        }
-                                    })));
+        try (Stream<String> startLines = Files.lines(Paths.get(startFilePath));
+             Stream<String> endLines = Files.lines(Paths.get(endFilePath))) {
+
+            Map<String, LocalDateTime> startTimes = startLines.collect(Collectors.toMap(
+                    line -> line.substring(0, 3),
+                    line -> LocalDateTime.parse(line.substring(3), DateTimeFormatter.ofPattern(dataTimePattern))
+            ));
+
+            Map<String, LocalDateTime> endTimes = endLines.collect(Collectors.toMap(
+                    line -> line.substring(0, 3),
+                    line -> LocalDateTime.parse(line.substring(3), DateTimeFormatter.ofPattern(dataTimePattern))
+            ));
+
+            return startTimes.entrySet().stream()
+                    .filter(entry -> endTimes.containsKey(entry.getKey()))
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> Duration.between(entry.getValue(), endTimes.get(entry.getKey())).toMillis()
+                    ));
         }
     }
+                                    
 }
