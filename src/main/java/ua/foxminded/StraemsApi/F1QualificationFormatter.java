@@ -7,6 +7,10 @@ public class F1QualificationFormatter {
 	private List<Racer> racers;
 
 	public String formatQualificationReport(List<Racer> racers) {
+		if (racers == null) {
+	        return ""; 
+	    }
+		
 		this.racers = racers;
 
 		StringBuilder result = new StringBuilder();

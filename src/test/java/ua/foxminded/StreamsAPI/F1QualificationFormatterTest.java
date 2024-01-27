@@ -3,6 +3,8 @@ package ua.foxminded.StreamsAPI;
 import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import ua.foxminded.StraemsApi.F1QualificationFormatter;
 import ua.foxminded.StraemsApi.Racer;
@@ -20,6 +22,25 @@ public class F1QualificationFormatterTest {
 				+ "______________________________________________________________\n" + "";
 		assertEquals(expectedResult, result);
 
+	}
+
+	@Test
+	void formatQualificationReport_shouldReturnFormattedString_whenOnlyOneRecer() {
+		F1QualificationFormatter formatter = new F1QualificationFormatter();
+		List<Racer> racers = Arrays.asList(new Racer("Driver1", "Team1", 120_000L));
+		String result = formatter.formatQualificationReport(racers);
+		String expectedResult = "1.  Driver1              | Team1                          | 02:00.000\n"
+				+ "______________________________________________________________\n" + "";
+		assertEquals(expectedResult, result);
+
+	}
+
+	@Test
+	void formatQualificationReport_shouldReturnEmptyString_whenRacersListIsNull() {
+		F1QualificationFormatter formatter = new F1QualificationFormatter();
+		List<Racer> racers = null;
+		String result = formatter.formatQualificationReport(racers);
+		assertTrue(result.isEmpty());
 	}
 
 }
