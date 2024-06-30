@@ -137,4 +137,16 @@ public class CourseDAO implements Dao<Course> {
 		}
 		return courses;
 	}
+	
+	public void assignCourse(int studentId, int courseId) {
+		String sql = "INSERT INTO School.STUDENTS_COURSES (student_id, course_id) VALUES (?, ?)";
+		try (PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, studentId);
+			statement.setInt(2, courseId);
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 }

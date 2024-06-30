@@ -8,7 +8,6 @@ import java.util.Random;
 
 import ua.SchoolConsoleApp.DAO.CourseDAO;
 import ua.SchoolConsoleApp.DAO.GroupDAO;
-import ua.SchoolConsoleApp.DAO.StudentsCoursesDAO;
 import ua.SchoolConsoleApp.DAO.StudentsDAO;
 import ua.SchoolConsoleApp.DB.DB_file_reader;
 import ua.SchoolConsoleApp.DB.DatabaseConnection;
@@ -85,7 +84,6 @@ public class DBInitializer {
 	private static void insertStudentCoursesInitialData(Connection connection) throws SQLException {
 		StudentsDAO studentDAO = new StudentsDAO(connection);
 		CourseDAO courseDAO = new CourseDAO(connection);
-		StudentsCoursesDAO studentsCoursesDAO = new StudentsCoursesDAO(connection);
 		List<Student> students = studentDAO.getAll();
 		List<Course> courses = courseDAO.getAll();
 		Random random = new Random();
@@ -94,7 +92,7 @@ public class DBInitializer {
 			Collections.shuffle(courses);
 			List<Course> selectedCourses = courses.subList(0, numCourses);
 			for (Course course : selectedCourses) {
-				studentsCoursesDAO.assignCourse(student.getId(), course.getId());
+				courseDAO.assignCourse(student.getId(), course.getId());
 			}
 		}
 	}
