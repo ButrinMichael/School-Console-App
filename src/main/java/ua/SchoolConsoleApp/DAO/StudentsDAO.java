@@ -1,241 +1,141 @@
 package ua.SchoolConsoleApp.DAO;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.List;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-
-import ua.SchoolConsoleApp.Course;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
 import ua.SchoolConsoleApp.Student;
-        
-public class StudentsDAO  implements Dao<Student> {
-	private final Connection connection;
+import ua.SchoolConsoleApp.Course;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 
-	public StudentsDAO(Connection connection) {
-		this.connection = connection;
+@Repository
+public class StudentsDAO implements Dao<Student> {
+	private final JdbcTemplate jdbcTemplate;
+
+	@Autowired
+	public StudentsDAO(JdbcTemplate jdbcTemplate) {
+		this.jdbcTemplate = jdbcTemplate;
 	}
-   
-	    
-	@Override
-	public Student read(int id) throws SQLException {
-		Student student = null;
-		try {
-			PreparedStatement statement = connection
-					.prepareStatement("SELECT * FROM school.students WHERE student_id = ?");
-			statement.setInt(1, id);
-			ResultSet resultSet = statement.executeQuery();
-			if (resultSet.next()) {
-				Integer groupId = resultSet.getInt("group_id");
-				String firstName = resultSet.getString("first_name");
-				String lastName = resultSet.getString("last_name");
-				student = new Student(id, groupId, firstName, lastName);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
+
+	private final RowMapper<Student> studentRowMapper = new RowMapper<Student>() {
+		@Override
+		public Student mapRow(ResultSet rs, int rowNum) throws SQLException {
+			int id = rs.getInt("student_id");
+			int groupId = rs.getInt("group_id");
+			String firstName = rs.getString("first_name");
+			String lastName = rs.getString("last_name");
+			return new Student(id, groupId, firstName, lastName);
 		}
-		return student;
-	}
+	};
 
-	@Override
-	public void update(Student student) throws SQLException {
-		String sql = "UPDATE school.students SET group_id = ?, first_name = ?, last_name = ? WHERE student_id = ?";
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setInt(1, student.getGroupId());
-			statement.setString(2, student.getFirstName());
-			statement.setString(3, student.getLastName());
-			statement.setInt(4, student.getId());
-			statement.executeUpdate();
+	private final RowMapper<Course> courseRowMapper = new RowMapper<Course>() {
+		@Override
+		public Course mapRow(ResultSet rs, int rowNum) throws SQLException {
+			int courseId = rs.getInt("course_id");
+			String courseName = rs.getString("course_name");
+			return new Course(courseId, courseName);
 		}
-	}
+	};
 
 	@Override
-	public void delete(int id) throws SQLException {
-		try {
-			PreparedStatement deleteCoursesStatement = connection
-					.prepareStatement("DELETE FROM School.STUDENTS_COURSES WHERE student_id = ?");
-			deleteCoursesStatement.setInt(1, id);
-			deleteCoursesStatement.executeUpdate();
-			PreparedStatement deleteStudentStatement = connection
-					.prepareStatement("DELETE FROM School.STUDENTS WHERE student_id = ?");
-			deleteStudentStatement.setInt(1, id);
-			deleteStudentStatement.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	@Override
-	public void create(Student student) throws SQLException {
+	public void create(Student student) {
 		String sql = "INSERT INTO school.STUDENTS (group_id, first_name, last_name) VALUES (?, ?, ?)";
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
-	        if (student.getGroupId() != null) {
-	            statement.setInt(1, student.getGroupId());
-	        } else {
-	            statement.setNull(1, Types.INTEGER);
-	        }
-	        statement.setString(2, student.getFirstName());
-	        statement.setString(3, student.getLastName());
-	        statement.executeUpdate();
-	    }
+		jdbcTemplate.update(sql, student.getGroupId(), student.getFirstName(), student.getLastName());
+	}
+
+	@Override
+	public void update(Student student) {
+		String sql = "UPDATE school.students SET group_id = ?, first_name = ?, last_name = ? WHERE student_id = ?";
+		jdbcTemplate.update(sql, student.getGroupId(), student.getFirstName(), student.getLastName(), student.getId());
+	}
+
+	@Override
+	public void delete(int id) {
+		String deleteCoursesSql = "DELETE FROM School.STUDENTS_COURSES WHERE student_id = ?";
+		jdbcTemplate.update(deleteCoursesSql , id);
+		
+		String deleteStudentSql  = "DELETE FROM school.students WHERE student_id = ?";
+		jdbcTemplate.update(deleteStudentSql , id);
+	}
+
+
+	@Override
+	public Student read(int id) {
+		String sql = "SELECT * FROM school.students WHERE student_id = ?";
+		List<Student> students = jdbcTemplate.query(sql, studentRowMapper, id);
+		if (students.isEmpty()) {
+			return null;
+		} else {
+			return students.get(0);
+		}
 	}
 
 	@Override
 	public List<Student> getAll() {
-		List<Student> students = new ArrayList<>();
-		String sql = "SELECT * FROM school.STUDENTS";
-		try (PreparedStatement statement = connection.prepareStatement(sql);
-				ResultSet resultSet = statement.executeQuery()) {
-			while (resultSet.next()) {
-				int id = resultSet.getInt("student_id");
-				int groupId = resultSet.getInt("group_id");
-				String firstName = resultSet.getString("first_name");
-				String lastName = resultSet.getString("last_name");
-				students.add(new Student(id, groupId, firstName, lastName));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return students;
+		String sql = "SELECT * FROM school.students";
+		return jdbcTemplate.query(sql, studentRowMapper);
 	}
 
 	public int getNumStudentsInGroup(int groupId) {
-		int numStudents = 0;
 		String sql = "SELECT COUNT(*) FROM school.students WHERE group_id = ?";
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setInt(1, groupId);
-			ResultSet resultSet = statement.executeQuery();
-			if (resultSet.next()) {
-				numStudents = resultSet.getInt(1);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return numStudents;
+		return jdbcTemplate.queryForObject(sql, Integer.class, groupId);
 	}
 
-	public List<Student> getStudentsByCourseName(String courseName) throws SQLException {
-		List<Student> students = new ArrayList<>();
+	public List<Student> getStudentsByCourseName(String courseName) {
 		String sql = "SELECT s.* FROM school.students s "
 				+ "JOIN school.students_courses sc ON s.student_id = sc.student_id "
 				+ "JOIN school.courses c ON sc.course_id = c.course_id " + "WHERE c.course_name = ?";
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setString(1, courseName);
-			ResultSet resultSet = statement.executeQuery();
-			while (resultSet.next()) {
-				int id = resultSet.getInt("student_id");
-				int groupId = resultSet.getInt("group_id");
-				String firstName = resultSet.getString("first_name");
-				String lastName = resultSet.getString("last_name");
-				Student student = new Student(id, groupId, firstName, lastName);
-				students.add(student);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return students;
+		return jdbcTemplate.query(sql, studentRowMapper, courseName);
+
 	}
 
-	public int getStudentIdByName(String firstName, String lastName) throws SQLException {
-		int studentId = -1;
-		String sql = "SELECT student_id FROM school.students WHERE first_name = ? AND last_name = ?";
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setString(1, firstName);
-			statement.setString(2, lastName);
-			ResultSet resultSet = statement.executeQuery();
-			if (resultSet.next()) {
-				studentId = resultSet.getInt("student_id");
-			}
-		}
-
-		return studentId;
+	public int getStudentIdByName(String firstName, String lastName) {
+		String sql = "SELECT student_id FROM school.students WHERE first_name = ? AND last_name = ? AND (group_id IS NULL OR group_id IS NOT NULL)";
+	    try {
+	        return jdbcTemplate.queryForObject(sql, Integer.class, firstName, lastName);
+	    } catch (EmptyResultDataAccessException e) {
+	        return -1;
+	    }
 	}
-	
-	public void removeStudentFromCourse(int studentId, int courseId) throws SQLException {
+
+
+	public void removeStudentFromCourse(int studentId, int courseId) {
 		String sql = "DELETE FROM school.students_courses WHERE student_id = ? AND course_id = ?";
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setInt(1, studentId);
-			statement.setInt(2, courseId);
-			int rowsAffected = statement.executeUpdate();
-			if (rowsAffected > 0) {
-				System.out.println("Student successfully removed from the course!");
-			} else {
-				System.out.println("Failed to remove student from the course.");
-			}
+		int rowsAffected = jdbcTemplate.update(sql, studentId, courseId);
+		if (rowsAffected > 0) {
+			System.out.println("Student successfully removed from the course!");
+		} else {
+			System.out.println("Failed to remove student from the course.");
 		}
 	}
-	
-	public void removeCourseFromStudent(int studentId, int courseId) throws SQLException {
-	    String sql = "DELETE FROM school.students_courses WHERE student_id = ? AND course_id = ?";
-	    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-	        statement.setInt(1, studentId);
-	        statement.setInt(2, courseId);
-	        int rowsAffected = statement.executeUpdate();
-	        if (rowsAffected > 0) {
-	            System.out.println("Course successfully removed from the student!");
-	        } else {
-	            System.out.println("Failed to remove course from the student.");
-	        }
-	    }
-	}
-	
-	public void addCourseToStudent(int studentId, int courseId) throws SQLException {
-	    String sql = "INSERT INTO school.students_courses (student_id, course_id) VALUES (?, ?)";
-	    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-	        statement.setInt(1, studentId);
-	        statement.setInt(2, courseId);
-	        int rowsAffected = statement.executeUpdate();
-	        if (rowsAffected > 0) {
-	            System.out.println("Course successfully added to the student!");
-	        } else {
-	            System.out.println("Failed to add course to the student.");
-	        }
-	    }
-	}
-	
-	public List<Course> getCoursesByStudentId(int studentId) throws SQLException {
-	    List<Course> courses = new ArrayList<>();
-	    String sql = "SELECT c.* FROM school.courses c " +
-	                 "JOIN school.students_courses sc ON c.course_id = sc.course_id " +
-	                 "WHERE sc.student_id = ?";
-	    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-	        statement.setInt(1, studentId);
-	        ResultSet resultSet = statement.executeQuery();
-	        while (resultSet.next()) {
-	            int courseId = resultSet.getInt("course_id");
-	            String courseName = resultSet.getString("course_name");
-	            Course course = new Course(courseId, courseName);
-	            courses.add(course);
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-	    return courses;
+
+	public void removeCourseFromStudent(int studentId, int courseId) {
+		String sql = "DELETE FROM school.students_courses WHERE student_id = ? AND course_id = ?";
+		int rowsAffected = jdbcTemplate.update(sql, studentId, courseId);
+		if (rowsAffected > 0) {
+			System.out.println("Course successfully removed from the student!");
+		} else {
+			System.out.println("Failed to remove course from the student.");
+		}
 	}
 
-	public List<Student> getStudentsByCourseId(int courseId) throws SQLException {
-	    List<Student> students = new ArrayList<>();
-	    String sql = "SELECT s.* FROM school.students s " +
-	                 "JOIN school.students_courses sc ON s.student_id = sc.student_id " +
-	                 "WHERE sc.course_id = ?";
-	    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-	        statement.setInt(1, courseId);
-	        ResultSet resultSet = statement.executeQuery();
-	        while (resultSet.next()) {
-	            int studentId = resultSet.getInt("student_id");
-	            int groupId = resultSet.getInt("group_id");
-	            String firstName = resultSet.getString("first_name");
-	            String lastName = resultSet.getString("last_name");
-	            Student student = new Student(studentId, groupId, firstName, lastName);
-	            students.add(student);
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-	    return students;
+	public int addCourseToStudent(int studentId, int courseId) {
+		String sql = "INSERT INTO school.students_courses (student_id, course_id) VALUES (?, ?)";
+		return jdbcTemplate.update(sql, studentId, courseId);	
 	}
 
+	public List<Course> getCoursesByStudentId(int studentId) {
+		String sql = "SELECT c.* FROM school.courses c "
+				+ "JOIN school.students_courses sc ON c.course_id = sc.course_id " + "WHERE sc.student_id = ?";
+		return jdbcTemplate.query(sql, courseRowMapper, studentId);
+	}
+
+	public List<Student> getStudentsByCourseId(int courseId) {
+		String sql = "SELECT s.* FROM school.students s "
+				+ "JOIN school.students_courses sc ON s.student_id = sc.student_id " + "WHERE sc.course_id = ?";
+		return jdbcTemplate.query(sql, studentRowMapper, courseId);
+	}
 }

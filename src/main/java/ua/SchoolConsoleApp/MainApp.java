@@ -1,35 +1,55 @@
 package ua.SchoolConsoleApp;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 import ua.SchoolConsoleApp.DAO.CourseDAO;
 import ua.SchoolConsoleApp.DAO.GroupDAO;
 import ua.SchoolConsoleApp.DAO.StudentsDAO;
-import ua.SchoolConsoleApp.DB.DatabaseConnection;
 
-public class MainApp {
-	private static final Scanner scanner = new Scanner(System.in);
-
+@SpringBootApplication
+public class MainApp implements CommandLineRunner {
 	private static void closeScanner() {
 		if (scanner != null) {
 			scanner.close();
-
 		}
 	}
 
-	public static void main(String[] args) throws SQLException {
-		// DBInitializer.initializeDatabase();
+	@Autowired
+	private StudentsDAO studentsDAO;
 
-		showMenu();
-		closeScanner();
+	@Autowired
+	private GroupDAO groupDAO;
+
+	@Autowired
+	private CourseDAO courseDAO;
+
+	@Autowired
+	private DBInitializer dbInitializer;
+
+	private static Scanner scanner = new Scanner(System.in);
+
+	public static void main(String[] args) {
+
+		SpringApplication.run(MainApp.class, args);
 	}
 
-	private static void showMenu() throws SQLException {
+	@Override
+	public void run(String... args) throws Exception {
+		// dbInitializer.initializeDatabase();
+		showMenu();
+		closeScanner();
+		System.exit(0);
+	}
+
+	private void showMenu() throws SQLException {
 		boolean showMenuUntilTrue = true;
 		while (showMenuUntilTrue == true) {
 			System.out.println("Please select an action:");
@@ -65,6 +85,8 @@ public class MainApp {
 				break;
 			case 7:
 				System.out.println("Goodbuy");
+				closeScanner();
+				System.exit(0);
 				break;
 			default:
 				System.out.println("Invalid choise");
@@ -79,69 +101,60 @@ public class MainApp {
 		}
 	}
 
-	public static List<Group> findGroupsWithLessOrEqualStudents() throws SQLException {
+	public List<Group> findGroupsWithLessOrEqualStudents() throws SQLException {
 		List<Group> result = new ArrayList<>();
 		System.out.println("Enter the maximum number of students:");
 		int maxStudents = scanner.nextInt();
 
-		try (Connection connection = DatabaseConnection.getConnection()) {
-			GroupDAO groupDAO = new GroupDAO(connection);
-			List<Group> allGroups = groupDAO.getAll();
-			StudentsDAO studentsDAO = new StudentsDAO(connection);
-
-			for (Group group : allGroups) {
-				int numStudents = studentsDAO.getNumStudentsInGroup(group.getId());
-				if (numStudents <= maxStudents) {
-					result.add(group);
-				}
+		List<Group> allGroups = groupDAO.getAll();
+		for (Group group : allGroups) {
+			int numStudents = studentsDAO.getNumStudentsInGroup(group.getId());
+			if (numStudents <= maxStudents) {
+				result.add(group);
 			}
+		}
 
-			if (result.isEmpty()) {
-				System.out.println("Groups not found.");
-			} else {
-				System.out.println("Groups with number of students less than or equal to " + maxStudents + ":");
-				for (Group group : result) {
-					System.out.println(group);
-				}
+		if (result.isEmpty()) {
+			System.out.println("Groups not found.");
+		} else {
+			System.out.println("Groups with number of students less than or equal to " + maxStudents + ":");
+			for (Group group : result) {
+				System.out.println(group);
 			}
-		} catch (SQLException e) {
-			System.err.println("Error occurred while retrieving groups: " + e.getMessage());
-			e.printStackTrace();
-			showMenu(); 
 		}
 
 		return result;
 	}
 
-	public static List<Student> findStudentsByCourseName() throws SQLException {
+	public List<Student> findStudentsByCourseName() throws SQLException {
 		List<Student> result = new ArrayList<>();
 		System.out.println("Enter the name of the course:");
 		String courseName = scanner.nextLine().trim();
-
-		try (Connection connection = DatabaseConnection.getConnection()) {
-			StudentsDAO studentsDAO = new StudentsDAO(connection);
-			List<Student> students = studentsDAO.getStudentsByCourseName(courseName);
-			if (students.isEmpty()) {
-				System.out.println("Students associated with the course  \"" + courseName + "\", were not found.");
-
-			} else {
-				System.out.println("Students associated with the course \"" + courseName + "\":");
-
-				for (Student student : students) {
-					System.out.println(student.getFirstName() + " " + student.getLastName());
-				}
-				result.addAll(students);
-			}
-		} catch (SQLException e) {
-			System.err.println("Error occurred while retrieving groups: " + e.getMessage());
-			e.printStackTrace();
-			showMenu(); 
+		
+		int courses = courseDAO.getCourseIdByName(courseName);
+		if (courses == -1) {
+			System.out.println("The course with the specified name was not found.");
+			return result;
 		}
-		return result;
+		
+		List<Student> students = studentsDAO.getStudentsByCourseName(courseName);
+		if (students.isEmpty()) {
+			System.out.println("Students associated with the course  \"" + courseName + "\", were not found.");
 
+		} else {
+			System.out.println("Students associated with the course \"" + courseName + "\":");
+
+			for (Student student : students) {
+				System.out.println(student.getFirstName() + " " + student.getLastName());
+			}
+			result.addAll(students);
+		}
+
+		return result;
+		
 	}
 
-	private static void addNewStudent() throws SQLException {
+	private void addNewStudent() throws SQLException {
 		System.out.println("Enter the student's name:");
 		String firstName = scanner.nextLine();
 		System.out.println("Enter the student's surname:");
@@ -149,139 +162,104 @@ public class MainApp {
 
 		Student student = new Student(firstName, lastName);
 
-		try (Connection connection = DatabaseConnection.getConnection()) {
-			StudentsDAO studentsDAO = new StudentsDAO(connection);
-			studentsDAO.create(student);
-			System.out.println("The student has been successfully added.");
-		} catch (SQLException e) {
-			System.err.println("Error occurred while adding the student: " + e.getMessage());
-			e.printStackTrace();
-			showMenu(); 
-		}
+		studentsDAO.create(student);
+		System.out.println("The student has been successfully added.");
 	}
 
-	private static void deleteStudent() throws SQLException {
-
+	private void deleteStudent() throws SQLException {
 		System.out.println("Enter the student ID for deletion:");
 		int studentId = scanner.nextInt();
-		try (Connection connection = DatabaseConnection.getConnection()) {
-			StudentsDAO studentsDAO = new StudentsDAO(connection);
-			Student student = studentsDAO.read(studentId);
-			if (student != null) {
-				studentsDAO.delete(studentId);
-				System.out.println("The student has been successfully deleted.");
-			} else {
-				System.out.println("Student with ID " + studentId + " does not exist.");
-			}
-		} catch (SQLException e) {
-			System.err.println("Error occurred while deleting the student: " + e.getMessage());
-			e.printStackTrace();
-			showMenu(); 
+		Student student = studentsDAO.read(studentId);
+		if (student != null) {
+			studentsDAO.delete(studentId);
+			System.out.println("The student " + student.getFirstName() + " " + student.getLastName()
+					+ " has been successfully deleted.");
+		} else {
+			System.out.println("Student with ID " + studentId + " does not exist.");
 		}
 	}
 
-	public static void addStudentToCourse() throws SQLException {
+	public void addStudentToCourse() throws SQLException {
 		System.out.println("Enter the student's name:");
 		String studentName = scanner.nextLine().trim();
 
 		System.out.println("Enter the student's surname:");
 		String studentLastName = scanner.nextLine().trim();
 
-		try (Connection connection = DatabaseConnection.getConnection()) {
-			CourseDAO courseDAO = new CourseDAO(connection);
-			StudentsDAO studentsDAO = new StudentsDAO(connection);
+		List<Course> courses = courseDAO.getAll();
+		if (courses.isEmpty()) {
+			System.out.println("Course list is empty.");
+			return;
+		}
 
-			List<Course> courses = courseDAO.getAll();
-			if (courses.isEmpty()) {
-				System.out.println("Course list is empty.");
-				return;
-			}
+		System.out.println("Enter the name of the course from the list:");
+		for (Course course : courses) {
+			System.out.println(course.getName());
+		}
 
-			System.out.println("Enter the name of the course from the list:");
-			for (Course course : courses) {
-				System.out.println(course.getName());
-			}
+		String courseName = scanner.nextLine().trim();
+		int courseId = courseDAO.getCourseIdByName(courseName);
 
-			String courseName = scanner.nextLine().trim();
-			int courseId = courseDAO.getCourseIdByName(courseName);
+//		if (courseId != -1) {
+			int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
 
-			if (courseId != -1) {
-				int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
+			if (studentId != -1) {
+				boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
+				if (courseId != -1) {
+				if (!isEnrolled) {
+					studentsDAO.addCourseToStudent(studentId, courseId);
+					System.out.println("The student has been successfully added to the course!");
 
-				if (studentId != -1) {
-					boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
-
-					if (!isEnrolled) {
-						String sql = "INSERT INTO school.students_courses (student_id, course_id) VALUES (?, ?)";
-						try (PreparedStatement statement = connection.prepareStatement(sql)) {
-							statement.setInt(1, studentId);
-							statement.setInt(2, courseId);
-							statement.executeUpdate();
-							System.out.println("The student has been successfully added to the course!");
-						}
-					} else {
-						System.out.println("The student is already enrolled in this course.");
-					}
 				} else {
-					System.out.println("The student with the specified name and surname was not found.");
+					System.out.println("The student is already enrolled in this course.");
 				}
 			} else {
-				System.out.println("The course with the specified name was not found.");
+				System.out.println("The student with the specified name and surname was not found.");
 			}
-		} catch (SQLException e) {
-			System.err.println("Error occurred while adding the student to the course: " + e.getMessage());
-			e.printStackTrace();
-			showMenu(); 
+		} else {
+			System.out.println("The course with the specified name was not found.");
 		}
 	}
 
-	public static void removeStudentFromCourse() throws SQLException {
+	public void removeStudentFromCourse() throws SQLException {
 		System.out.println("Enter the student's name:");
 		String studentName = scanner.nextLine().trim();
 		System.out.println("Enter the student's surname:");
 		String studentLastName = scanner.nextLine().trim();
 
-		try (Connection connection = DatabaseConnection.getConnection()) {
-			CourseDAO courseDAO = new CourseDAO(connection);
-			StudentsDAO studentsDAO = new StudentsDAO(connection);
-			int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
-			if (studentId == -1) {
-				System.out.println("The student with the specified name and surname was not found.");
-				return;
-			}
+		int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
 
-			List<Course> enrolledCourses = courseDAO.getCoursesByStudentId(studentId);
-			if (enrolledCourses.isEmpty()) {
-				System.out.println("The student is not enrolled in any course.");
-				return;
-			}
-
-			System.out.println("The student is enrolled in the following courses:");
-			for (Course course : enrolledCourses) {
-				System.out.println(course.getName());
-			}
-
-			System.out.println("Enter the name of the course to remove from the list:");
-			String courseName = scanner.nextLine().trim();
-
-			int courseId = courseDAO.getCourseIdByName(courseName);
-			if (courseId == -1) {
-				System.out.println("The course with the specified name was not found.");
-				return;
-			}
-
-			boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
-			if (!isEnrolled) {
-				System.out.println("The student is not enrolled in the specified course.");
-				return;
-			}
-			studentsDAO.removeStudentFromCourse(studentId, courseId);
-		} catch (SQLException e) {
-			System.err.println("Error occurred while removing the student from the course: " + e.getMessage());
-			e.printStackTrace();
-			showMenu();
+		if (studentId == -1) {
+			System.out.println("The student with the specified name and surname was not found.");
+			return;
 		}
 
+		List<Course> enrolledCourses = courseDAO.getCoursesByStudentId(studentId);
+
+		if (enrolledCourses.isEmpty()) {
+			System.out.println("The student is not enrolled in any course.");
+			return;
+		}
+		System.out.println("The student is enrolled in the following courses:");
+		for (Course course : enrolledCourses) {
+			System.out.println(course.getName());
+		}
+
+		System.out.println("Enter the name of the course to remove from the list:");
+		String courseName = scanner.nextLine().trim();
+
+		int courseId = courseDAO.getCourseIdByName(courseName);
+		if (courseId == -1) {
+			System.out.println("The course with the specified name was not found.");
+			return;
+		}
+
+		boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
+		if (!isEnrolled) {
+			System.out.println("The student is not enrolled in the specified course.");
+			return;
+		}
+		studentsDAO.removeStudentFromCourse(studentId, courseId);
 	}
 
 }
