@@ -130,13 +130,13 @@ public class MainApp implements CommandLineRunner {
 		List<Student> result = new ArrayList<>();
 		System.out.println("Enter the name of the course:");
 		String courseName = scanner.nextLine().trim();
-		
+
 		int courses = courseDAO.getCourseIdByName(courseName);
 		if (courses == -1) {
 			System.out.println("The course with the specified name was not found.");
 			return result;
 		}
-		
+
 		List<Student> students = studentsDAO.getStudentsByCourseName(courseName);
 		if (students.isEmpty()) {
 			System.out.println("Students associated with the course  \"" + courseName + "\", were not found.");
@@ -151,7 +151,7 @@ public class MainApp implements CommandLineRunner {
 		}
 
 		return result;
-		
+
 	}
 
 	private void addNewStudent() throws SQLException {
@@ -199,13 +199,11 @@ public class MainApp implements CommandLineRunner {
 
 		String courseName = scanner.nextLine().trim();
 		int courseId = courseDAO.getCourseIdByName(courseName);
+		int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
 
-//		if (courseId != -1) {
-			int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
-
-			if (studentId != -1) {
-				boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
-				if (courseId != -1) {
+		if (studentId != -1) {
+			boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
+			if (courseId != -1) {
 				if (!isEnrolled) {
 					studentsDAO.addCourseToStudent(studentId, courseId);
 					System.out.println("The student has been successfully added to the course!");

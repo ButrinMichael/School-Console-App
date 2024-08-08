@@ -14,6 +14,18 @@ import java.util.List;
 public class CourseDAO implements Dao<Course> {
 	private final JdbcTemplate jdbcTemplate;
 
+	private static final String InsertCourseSQL = "INSERT INTO school.COURSES (course_name, course_description) VALUES (?, ?)";
+	private static final String SelectCoursByIdSQL = "SELECT * FROM school.courses WHERE course_id = ?";
+	private static final String UpdateCourseSQL = "UPDATE school.courses SET course_name = ?, course_description = ? WHERE course_id = ?";;
+	private static final String DeleteStudentCourseSQL = "DELETE FROM School.STUDENTS_COURSES WHERE course_id = ?";;
+	private static final String DeleteCourseSQL = "DELETE FROM School.COURSES WHERE course_id = ?";;
+	private static final String SelectAllCoursesSQL = "SELECT * FROM school.COURSES";
+	private static final String DelectCourseIdByNameSQL = "SELECT course_id FROM school.COURSES WHERE course_name = ?";
+	private static final String CheckStudentEnrollmentSQL = "SELECT COUNT(*) FROM School.STUDENTS_COURSES WHERE student_id = ? AND course_id = ?";
+	private static final String SelectCourseByStudentIdSQL = "SELECT c.course_id, c.course_name, c.course_description FROM school.courses c "
+			+ "INNER JOIN school.students_courses sc ON c.course_id = sc.course_id " + "WHERE sc.student_id = ?";;
+	private static final String AssignCourseSQL = "INSERT INTO School.STUDENTS_COURSES (student_id, course_id) VALUES (?, ?)";
+
 	@Autowired
 	public CourseDAO(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
@@ -32,14 +44,12 @@ public class CourseDAO implements Dao<Course> {
 
 	@Override
 	public void create(Course course) throws SQLException {
-		String sql = "INSERT INTO school.COURSES (course_name, course_description) VALUES (?, ?)";
-		jdbcTemplate.update(sql, course.getName(), course.getDescription());
+		jdbcTemplate.update(InsertCourseSQL, course.getName(), course.getDescription());
 	}
 
 	@Override
 	public Course read(int id) throws SQLException {
-		String sql = "SELECT * FROM school.courses WHERE course_id = ?";
-		List<Course> courses = jdbcTemplate.query(sql, courseRowMapper, id);
+		List<Course> courses = jdbcTemplate.query(SelectCoursByIdSQL, courseRowMapper, id);
 		if (courses.isEmpty()) {
 			return null;
 		} else {
@@ -49,47 +59,38 @@ public class CourseDAO implements Dao<Course> {
 
 	@Override
 	public void update(Course course) throws SQLException {
-		String sql = "UPDATE school.courses SET course_name = ?, course_description = ? WHERE course_id = ?";
-		jdbcTemplate.update(sql, course.getName(), course.getDescription(), course.getId());
+		jdbcTemplate.update(UpdateCourseSQL, course.getName(), course.getDescription(), course.getId());
 	}
 
 	@Override
 	public void delete(int id) throws SQLException {
-		String deleteStudentCourseSql = "DELETE FROM School.STUDENTS_COURSES WHERE course_id = ?";
-		String deleteCourseSql = "DELETE FROM School.COURSES WHERE course_id = ?";
-		jdbcTemplate.update(deleteStudentCourseSql, id);
-		jdbcTemplate.update(deleteCourseSql, id);
+		jdbcTemplate.update(DeleteStudentCourseSQL, id);
+		jdbcTemplate.update(DeleteCourseSQL, id);
 	}
 
 	@Override
 	public List<Course> getAll() throws SQLException {
-		String sql = "SELECT * FROM school.COURSES";
-		return jdbcTemplate.query(sql, courseRowMapper);
+		return jdbcTemplate.query(SelectAllCoursesSQL, courseRowMapper);
 	}
 
 	public int getCourseIdByName(String courseName) throws SQLException {
-		String sql = "SELECT course_id FROM school.COURSES WHERE course_name = ?";		
 		try {
-	        return jdbcTemplate.queryForObject(sql, Integer.class, courseName);
-	    } catch (EmptyResultDataAccessException e) {
-	        return -1;
-	    }
+			return jdbcTemplate.queryForObject(DelectCourseIdByNameSQL, Integer.class, courseName);
+		} catch (EmptyResultDataAccessException e) {
+			return -1;
+		}
 	}
 
 	public boolean isStudentEnrolled(int studentId, int courseId) throws SQLException {
-		String sql = "SELECT COUNT(*) FROM School.STUDENTS_COURSES WHERE student_id = ? AND course_id = ?";
-		int count = jdbcTemplate.queryForObject(sql, Integer.class, studentId, courseId);
+		int count = jdbcTemplate.queryForObject(CheckStudentEnrollmentSQL, Integer.class, studentId, courseId);
 		return count > 0;
 	}
 
 	public List<Course> getCoursesByStudentId(int studentId) throws SQLException {
-		String sql = "SELECT c.course_id, c.course_name, c.course_description FROM school.courses c "
-				+ "INNER JOIN school.students_courses sc ON c.course_id = sc.course_id " + "WHERE sc.student_id = ?";
-		return jdbcTemplate.query(sql, courseRowMapper, studentId);
+		return jdbcTemplate.query(SelectCourseByStudentIdSQL, courseRowMapper, studentId);
 	}
 
 	public void assignCourse(int studentId, int courseId) throws SQLException {
-		String sql = "INSERT INTO School.STUDENTS_COURSES (student_id, course_id) VALUES (?, ?)";
-		jdbcTemplate.update(sql, studentId, courseId);
+		jdbcTemplate.update(AssignCourseSQL, studentId, courseId);
 	}
 }
