@@ -33,19 +33,30 @@ public class StudentsDAO implements Dao<Student> {
 	private static final String SelectStudentByCourseId = "SELECT s.* FROM school.students s "
 			+ "JOIN school.students_courses sc ON s.student_id = sc.student_id " + "WHERE sc.course_id = ?";
 
-
-	
-	
-	
-	
 	@Autowired
 	public StudentsDAO(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	private final RowMapper<Student> studentRowMapper=new RowMapper<Student>(){@Override public Student mapRow(ResultSet rs,int rowNum)throws SQLException{int id=rs.getInt("student_id");int groupId=rs.getInt("group_id");String firstName=rs.getString("first_name");String lastName=rs.getString("last_name");return new Student(id,groupId,firstName,lastName);}};
+	private final RowMapper<Student> studentRowMapper = new RowMapper<Student>() {
+		@Override
+		public Student mapRow(ResultSet rs, int rowNum) throws SQLException {
+			int id = rs.getInt("student_id");
+			int groupId = rs.getInt("group_id");
+			String firstName = rs.getString("first_name");
+			String lastName = rs.getString("last_name");
+			return new Student(id, groupId, firstName, lastName);
+		}
+	};
 
-	private final RowMapper<Course> courseRowMapper=new RowMapper<Course>(){@Override public Course mapRow(ResultSet rs,int rowNum)throws SQLException{int courseId=rs.getInt("course_id");String courseName=rs.getString("course_name");return new Course(courseId,courseName);}};
+	private final RowMapper<Course> courseRowMapper = new RowMapper<Course>() {
+		@Override
+		public Course mapRow(ResultSet rs, int rowNum) throws SQLException {
+			int courseId = rs.getInt("course_id");
+			String courseName = rs.getString("course_name");
+			return new Course(courseId, courseName);
+		}
+	};
 
 	@Override
 	public void create(Student student) {
@@ -65,7 +76,7 @@ public class StudentsDAO implements Dao<Student> {
 	}
 
 	@Override
-	public Student read(int id) {		
+	public Student read(int id) {
 		List<Student> students = jdbcTemplate.query(SelectStudentByIdSQL, studentRowMapper, id);
 		if (students.isEmpty()) {
 			return null;
@@ -75,11 +86,11 @@ public class StudentsDAO implements Dao<Student> {
 	}
 
 	@Override
-	public List<Student> getAll() {		
+	public List<Student> getAll() {
 		return jdbcTemplate.query(SelectStudentByIdSQL, studentRowMapper);
 	}
 
-	public int getNumStudentsInGroup(int groupId) {		
+	public int getNumStudentsInGroup(int groupId) {
 		return jdbcTemplate.queryForObject(SelectCountStudentsByGroupIdSQL, Integer.class, groupId);
 	}
 
@@ -105,7 +116,7 @@ public class StudentsDAO implements Dao<Student> {
 		}
 	}
 
-	public void removeCourseFromStudent(int studentId, int courseId) {	
+	public void removeCourseFromStudent(int studentId, int courseId) {
 		int rowsAffected = jdbcTemplate.update(DeleteCourseFromStudentSQL, studentId, courseId);
 		if (rowsAffected > 0) {
 			System.out.println("Course successfully removed from the student!");
