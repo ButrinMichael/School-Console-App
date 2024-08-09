@@ -9,6 +9,7 @@ import ua.SchoolConsoleApp.Course;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class CourseDAO implements Dao<Course> {
@@ -48,13 +49,8 @@ public class CourseDAO implements Dao<Course> {
 	}
 
 	@Override
-	public Course read(int id) throws SQLException {
-		List<Course> courses = jdbcTemplate.query(SelectCoursByIdSQL, courseRowMapper, id);
-		if (courses.isEmpty()) {
-			return null;
-		} else {
-			return courses.get(0);
-		}
+	public Optional<Course> read(int id) throws SQLException {
+		return jdbcTemplate.query(SelectCoursByIdSQL, courseRowMapper, id).stream().findFirst();
 	}
 
 	@Override

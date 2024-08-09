@@ -3,6 +3,7 @@ package ua.SchoolConsoleApp;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ public class MainApp implements CommandLineRunner {
 	private CourseDAO courseDAO;
 
 	@Autowired
-	private DBInitializer dbInitializer;
+//	private DBInitializer dbInitializer;
 
 	private static Scanner scanner = new Scanner(System.in);
 
@@ -169,14 +170,14 @@ public class MainApp implements CommandLineRunner {
 	private void deleteStudent() throws SQLException {
 		System.out.println("Enter the student ID for deletion:");
 		int studentId = scanner.nextInt();
-		Student student = studentsDAO.read(studentId);
-		if (student != null) {
-			studentsDAO.delete(studentId);
-			System.out.println("The student " + student.getFirstName() + " " + student.getLastName()
-					+ " has been successfully deleted.");
-		} else {
-			System.out.println("Student with ID " + studentId + " does not exist.");
-		}
+		Optional<Student> studentOpt = studentsDAO.read(studentId);		
+	    studentOpt.ifPresentOrElse(student -> {
+	        studentsDAO.delete(studentId);
+	        System.out.println("The student " + student.getFirstName() + " " + student.getLastName()
+	                + " has been successfully deleted.");
+	    }, () -> {
+	        System.out.println("Student with ID " + studentId + " does not exist.");
+	    });
 	}
 
 	public void addStudentToCourse() throws SQLException {

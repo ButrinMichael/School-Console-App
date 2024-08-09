@@ -3,6 +3,8 @@ package ua.SchoolConsoleApp.DAO;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -40,9 +42,8 @@ public class GroupDAO implements Dao<Group> {
 		jdbcTemplate.update(InsertGroupSQL, group.getName());
 	}
 
-	@Override
-	public Group read(int id) throws SQLException {
-		return jdbcTemplate.queryForObject(SelectGroupByIdSQL, groupRowMapper, id);
+	public Optional<Group> read(int id) throws SQLException {
+		return jdbcTemplate.query(SelectGroupByIdSQL, groupRowMapper, id).stream().findFirst();
 	}
 
 	@Override

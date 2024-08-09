@@ -10,6 +10,7 @@ import ua.SchoolConsoleApp.Course;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class StudentsDAO implements Dao<Student> {
@@ -76,13 +77,8 @@ public class StudentsDAO implements Dao<Student> {
 	}
 
 	@Override
-	public Student read(int id) {
-		List<Student> students = jdbcTemplate.query(SelectStudentByIdSQL, studentRowMapper, id);
-		if (students.isEmpty()) {
-			return null;
-		} else {
-			return students.get(0);
-		}
+	public Optional<Student> read(int id) throws SQLException {
+		return jdbcTemplate.query(SelectStudentByIdSQL, studentRowMapper, id).stream().findFirst();
 	}
 
 	@Override
