@@ -2,6 +2,7 @@ package ua.SchoolConsoleApp;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -43,14 +44,14 @@ public class MainApp implements CommandLineRunner {
 	}
 
 	@Override
-	public void run(String... args) throws Exception {
+	public void run(String... args) {
 		// dbInitializer.initializeDatabase();
 		showMenu();
 		closeScanner();
 		System.exit(0);
 	}
 
-	private void showMenu() throws SQLException {
+	private void showMenu() {
 		boolean showMenuUntilTrue = true;
 		while (showMenuUntilTrue == true) {
 			System.out.println("Please select an action:");
@@ -102,60 +103,71 @@ public class MainApp implements CommandLineRunner {
 		}
 	}
 
-	public List<Group> findGroupsWithLessOrEqualStudents() throws SQLException {
+	public List<Group> findGroupsWithLessOrEqualStudents() {
 		List<Group> result = new ArrayList<>();
 		System.out.println("Enter the maximum number of students:");
-		int maxStudents = scanner.nextInt();
-
-		List<Group> allGroups = groupDAO.getAll();
-		for (Group group : allGroups) {
-			int numStudents = studentsDAO.getNumStudentsInGroup(group.getId());
-			if (numStudents <= maxStudents) {
-				result.add(group);
-			}
+		int maxStudents;
+		try {
+			maxStudents = scanner.nextInt();
+		} catch (InputMismatchException e) {
+			System.err.println("Invalid input. Please enter a valid integer.");
+			scanner.nextLine();
+			findGroupsWithLessOrEqualStudents();
+			return result;
 		}
-
-		if (result.isEmpty()) {
-			System.out.println("Groups not found.");
-		} else {
-			System.out.println("Groups with number of students less than or equal to " + maxStudents + ":");
-			for (Group group : result) {
-				System.out.println(group);
+		try {
+			List<Group> allGroups = groupDAO.getAll();
+			for (Group group : allGroups) {
+				int numStudents = studentsDAO.getNumStudentsInGroup(group.getId());
+				if (numStudents <= maxStudents) {
+					result.add(group);
+				}
 			}
-		}
 
+			if (result.isEmpty()) {
+				System.out.println("Groups not found.");
+			} else {
+				System.out.println("Groups with number of students less than or equal to " + maxStudents + ":");
+				for (Group group : result) {
+					System.out.println(group);
+				}
+			}
+		} catch (RuntimeException e) {
+			System.err.println("Failed to find groups: " + e.getMessage());
+		}
 		return result;
+
 	}
 
-	public List<Student> findStudentsByCourseName() throws SQLException {
+	public List<Student> findStudentsByCourseName() {
 		List<Student> result = new ArrayList<>();
 		System.out.println("Enter the name of the course:");
 		String courseName = scanner.nextLine().trim();
-
-		int courses = courseDAO.getCourseIdByName(courseName);
-		if (courses == -1) {
-			System.out.println("The course with the specified name was not found.");
-			return result;
-		}
-
-		List<Student> students = studentsDAO.getStudentsByCourseName(courseName);
-		if (students.isEmpty()) {
-			System.out.println("Students associated with the course  \"" + courseName + "\", were not found.");
-
-		} else {
-			System.out.println("Students associated with the course \"" + courseName + "\":");
-
-			for (Student student : students) {
-				System.out.println(student.getFirstName() + " " + student.getLastName());
+		int courseId;
+		try {
+			courseId = courseDAO.getCourseIdByName(courseName);
+			if (courseId == -1) {
+				return result;
 			}
-			result.addAll(students);
+
+			List<Student> students = studentsDAO.getStudentsByCourseName(courseName);
+			if (students.isEmpty()) {
+				System.out.println("Students associated with the course \"" + courseName + "\" were not found.");
+			} else {
+				System.out.println("Students associated with the course \"" + courseName + "\":");
+				for (Student student : students) {
+					System.out.println(student.getFirstName() + " " + student.getLastName());
+				}
+				result.addAll(students);
+			}
+		} catch (Exception e) {
+			System.err.println("An error occurred while finding students by course name: " + e.getMessage());
 		}
 
 		return result;
-
 	}
 
-	private void addNewStudent() throws SQLException {
+	private void addNewStudent() {
 		System.out.println("Enter the student's name:");
 		String firstName = scanner.nextLine();
 		System.out.println("Enter the student's surname:");
@@ -163,29 +175,50 @@ public class MainApp implements CommandLineRunner {
 
 		Student student = new Student(firstName, lastName);
 
-		studentsDAO.create(student);
-		System.out.println("The student has been successfully added.");
+		try {
+			studentsDAO.create(student);
+			System.out.println("The student has been successfully added.");
+		} catch (SQLException e) {
+			System.err.println("Failed to add new student: " + e.getMessage());
+		}
 	}
 
-	private void deleteStudent() throws SQLException {
+	private void deleteStudent() {
 		System.out.println("Enter the student ID for deletion:");
-		int studentId = scanner.nextInt();
-		Optional<Student> studentOpt = studentsDAO.read(studentId);		
-	    studentOpt.ifPresentOrElse(student -> {
-	        studentsDAO.delete(studentId);
-	        System.out.println("The student " + student.getFirstName() + " " + student.getLastName()
-	                + " has been successfully deleted.");
-	    }, () -> {
-	        System.out.println("Student with ID " + studentId + " does not exist.");
-	    });
+		int studentId;
+		try {
+			studentId = scanner.nextInt();
+		} catch (InputMismatchException e) {
+			System.err.println("Invalid input. Please enter a valid integer ID.");
+			scanner.next();
+			deleteStudent();
+			return;
+		}
+
+		try {
+			Optional<Student> studentOpt = studentsDAO.read(studentId);
+			studentOpt.isPresent();
+			studentsDAO.delete(studentId);
+			Student student = studentOpt.get();
+			System.out.println("The student " + student.getFirstName() + " " + student.getLastName()
+					+ " has been successfully deleted.");
+
+		} catch (RuntimeException e) {
+			System.out.println("Failed to delete student: " + e.getMessage() + " Please try again.");
+		}
 	}
 
-	public void addStudentToCourse() throws SQLException {
+	public void addStudentToCourse() {
 		System.out.println("Enter the student's name:");
 		String studentName = scanner.nextLine().trim();
 
 		System.out.println("Enter the student's surname:");
 		String studentLastName = scanner.nextLine().trim();
+
+		int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
+		if (studentId == -1) {
+			return;
+		}
 
 		List<Course> courses = courseDAO.getAll();
 		if (courses.isEmpty()) {
@@ -199,28 +232,22 @@ public class MainApp implements CommandLineRunner {
 		}
 
 		String courseName = scanner.nextLine().trim();
+
 		int courseId = courseDAO.getCourseIdByName(courseName);
-		int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
+		if (courseId == -1) {
+			return;
+		}
 
-		if (studentId != -1) {
-			boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
-			if (courseId != -1) {
-				if (!isEnrolled) {
-					studentsDAO.addCourseToStudent(studentId, courseId);
-					System.out.println("The student has been successfully added to the course!");
-
-				} else {
-					System.out.println("The student is already enrolled in this course.");
-				}
-			} else {
-				System.out.println("The student with the specified name and surname was not found.");
-			}
+		boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
+		if (isEnrolled) {
+			System.out.println("The student is already enrolled in this course.");
 		} else {
-			System.out.println("The course with the specified name was not found.");
+			studentsDAO.addCourseToStudent(studentId, courseId);
+			System.out.println("The student has been successfully added to the course!");
 		}
 	}
 
-	public void removeStudentFromCourse() throws SQLException {
+	public void removeStudentFromCourse() {
 		System.out.println("Enter the student's name:");
 		String studentName = scanner.nextLine().trim();
 		System.out.println("Enter the student's surname:");
@@ -229,12 +256,10 @@ public class MainApp implements CommandLineRunner {
 		int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
 
 		if (studentId == -1) {
-			System.out.println("The student with the specified name and surname was not found.");
 			return;
 		}
 
 		List<Course> enrolledCourses = courseDAO.getCoursesByStudentId(studentId);
-
 		if (enrolledCourses.isEmpty()) {
 			System.out.println("The student is not enrolled in any course.");
 			return;
@@ -249,7 +274,6 @@ public class MainApp implements CommandLineRunner {
 
 		int courseId = courseDAO.getCourseIdByName(courseName);
 		if (courseId == -1) {
-			System.out.println("The course with the specified name was not found.");
 			return;
 		}
 

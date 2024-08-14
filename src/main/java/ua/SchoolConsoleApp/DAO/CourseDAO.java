@@ -1,10 +1,13 @@
 package ua.SchoolConsoleApp.DAO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
 import ua.SchoolConsoleApp.Course;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,7 +24,7 @@ public class CourseDAO implements Dao<Course> {
 	private static final String DeleteStudentCourseSQL = "DELETE FROM School.STUDENTS_COURSES WHERE course_id = ?";;
 	private static final String DeleteCourseSQL = "DELETE FROM School.COURSES WHERE course_id = ?";;
 	private static final String SelectAllCoursesSQL = "SELECT * FROM school.COURSES";
-	private static final String DelectCourseIdByNameSQL = "SELECT course_id FROM school.COURSES WHERE course_name = ?";
+	private static final String SelectCourseIdByNameSQL = "SELECT course_id FROM school.COURSES WHERE course_name = ?";
 	private static final String CheckStudentEnrollmentSQL = "SELECT COUNT(*) FROM School.STUDENTS_COURSES WHERE student_id = ? AND course_id = ?";
 	private static final String SelectCourseByStudentIdSQL = "SELECT c.course_id, c.course_name, c.course_description FROM school.courses c "
 			+ "INNER JOIN school.students_courses sc ON c.course_id = sc.course_id " + "WHERE sc.student_id = ?";;
@@ -59,33 +62,56 @@ public class CourseDAO implements Dao<Course> {
 	}
 
 	@Override
+	@Transactional
 	public void delete(int id) throws SQLException {
 		jdbcTemplate.update(DeleteStudentCourseSQL, id);
 		jdbcTemplate.update(DeleteCourseSQL, id);
 	}
 
 	@Override
-	public List<Course> getAll() throws SQLException {
-		return jdbcTemplate.query(SelectAllCoursesSQL, courseRowMapper);
+	public List<Course> getAll() {
+		try {
+			return jdbcTemplate.query(SelectAllCoursesSQL, courseRowMapper);
+		} catch (DataAccessException e) {
+			System.err.println("Error fetching all courses: " + e.getMessage());
+			throw new RuntimeException("Failed to fetch courses", e);
+		}
 	}
 
-	public int getCourseIdByName(String courseName) throws SQLException {
+	public int getCourseIdByName(String courseName) {
 		try {
-			return jdbcTemplate.queryForObject(DelectCourseIdByNameSQL, Integer.class, courseName);
+			return jdbcTemplate.queryForObject(SelectCourseIdByNameSQL, Integer.class, courseName);
 		} catch (EmptyResultDataAccessException e) {
+			System.err.println("Course with name \"" + courseName + "\" not found.");
+			return -1;
+		} catch (DataAccessException e) {
+			System.err.println("Failed to retrieve course ID for name \"" + courseName + "\": " + e.getMessage());
 			return -1;
 		}
 	}
 
-	public boolean isStudentEnrolled(int studentId, int courseId) throws SQLException {
-		int count = jdbcTemplate.queryForObject(CheckStudentEnrollmentSQL, Integer.class, studentId, courseId);
-		return count > 0;
+	public boolean isStudentEnrolled(int studentId, int courseId) {
+		try {
+			int count = jdbcTemplate.queryForObject(CheckStudentEnrollmentSQL, Integer.class, studentId, courseId);
+			return count > 0;
+		} catch (EmptyResultDataAccessException e) {
+			return false;
+		} catch (DataAccessException e) {
+			System.err.println("Error checking student enrollment: " + e.getMessage());
+			throw new RuntimeException("Failed to check student enrollment", e);
+		}
 	}
 
-	public List<Course> getCoursesByStudentId(int studentId) throws SQLException {
-		return jdbcTemplate.query(SelectCourseByStudentIdSQL, courseRowMapper, studentId);
+	public List<Course> getCoursesByStudentId(int studentId) {
+		try {
+			return jdbcTemplate.query(SelectCourseByStudentIdSQL, courseRowMapper, studentId);
+		} catch (DataAccessException e) {
+			System.err.println("Error retrieving courses for student with ID " + studentId + ": " + e.getMessage());
+			throw new RuntimeException("Failed to retrieve courses for the student", e);
+		}
 	}
 
+	@Transactional
 	public void assignCourse(int studentId, int courseId) throws SQLException {
 		jdbcTemplate.update(AssignCourseSQL, studentId, courseId);
 	}

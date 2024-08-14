@@ -1,14 +1,18 @@
 package ua.SchoolConsoleApp.DAO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
 import ua.SchoolConsoleApp.Student;
 import ua.SchoolConsoleApp.Course;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,7 +64,7 @@ public class StudentsDAO implements Dao<Student> {
 	};
 
 	@Override
-	public void create(Student student) {
+	public void create(Student student) throws SQLException {
 		jdbcTemplate.update(InsertStudentSQL, student.getGroupId(), student.getFirstName(), student.getLastName());
 	}
 
@@ -71,14 +75,33 @@ public class StudentsDAO implements Dao<Student> {
 	}
 
 	@Override
+	@Transactional
 	public void delete(int id) {
-		jdbcTemplate.update(DeleteStudentFromStudentCoursesByIdSQL, id);
-		jdbcTemplate.update(DeleteStudentByIdSQL, id);
+		try {
+			jdbcTemplate.update(DeleteStudentFromStudentCoursesByIdSQL, id);
+			jdbcTemplate.update(DeleteStudentByIdSQL, id);
+		} catch (DataAccessException e) {
+			System.err.println("Error deleting student with ID " + id + ": " + e.getMessage());
+			throw new RuntimeException("Failed to delete student", e);
+		} catch (RuntimeException e) {
+			System.out.println("Failed to delete student: " + e.getMessage() + " Please try again.");
+		}
 	}
 
 	@Override
-	public Optional<Student> read(int id) throws SQLException {
-		return jdbcTemplate.query(SelectStudentByIdSQL, studentRowMapper, id).stream().findFirst();
+	public Optional<Student> read(int id) {
+		try {
+			List<Student> students = jdbcTemplate.query(SelectStudentByIdSQL, studentRowMapper, id);
+			if (students.isEmpty()) {
+
+				System.out.println("Student with ID " + id + " does not exist.");
+				return Optional.empty();
+			}
+			return Optional.of(students.get(0));
+		} catch (DataAccessException e) {
+			System.err.println("Error fetching student with ID " + id + ": " + e.getMessage());
+			throw new RuntimeException("Failed to fetch student", e);
+		}
 	}
 
 	@Override
@@ -87,18 +110,35 @@ public class StudentsDAO implements Dao<Student> {
 	}
 
 	public int getNumStudentsInGroup(int groupId) {
-		return jdbcTemplate.queryForObject(SelectCountStudentsByGroupIdSQL, Integer.class, groupId);
+		try {
+			return jdbcTemplate.queryForObject(SelectCountStudentsByGroupIdSQL, Integer.class, groupId);
+		} catch (EmptyResultDataAccessException e) {
+			System.err.println("No students found for group with ID " + groupId);
+			return 0;
+		} catch (DataAccessException e) {
+			System.err
+					.println("Error fetching number of students for group with ID " + groupId + ": " + e.getMessage());
+			throw new RuntimeException("Failed to fetch number of students", e);
+		}
 	}
 
 	public List<Student> getStudentsByCourseName(String courseName) {
-		return jdbcTemplate.query(SelectStudentsByCourseNameSQL, studentRowMapper, courseName);
-
+		try {
+			return jdbcTemplate.query(SelectStudentsByCourseNameSQL, studentRowMapper, courseName);
+		} catch (DataAccessException e) {
+			System.err.println("Failed to retrieve students for course name \"" + courseName + "\": " + e.getMessage());
+			return Collections.emptyList();
+		}
 	}
 
 	public int getStudentIdByName(String firstName, String lastName) {
 		try {
 			return jdbcTemplate.queryForObject(SelectStudentsIdByNameSQL, Integer.class, firstName, lastName);
 		} catch (EmptyResultDataAccessException e) {
+			System.err.println("The student with the specified name and surname was not found.");
+			return -1;
+		} catch (DataAccessException e) {
+			System.err.println("Failed to retrieve Student Id" + e.getMessage());
 			return -1;
 		}
 	}

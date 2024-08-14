@@ -6,9 +6,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
 import ua.SchoolConsoleApp.Group;
 
 @Repository
@@ -52,13 +55,18 @@ public class GroupDAO implements Dao<Group> {
 	}
 
 	@Override
+	@Transactional
 	public void delete(int id) throws SQLException {
 		jdbcTemplate.update(UpdateStudentsGroupByGroupIdSQL, id);
 		jdbcTemplate.update(DeleteGroupByIdSQL, id);
 	}
 
-	@Override
-	public List<Group> getAll() throws SQLException {
-		return jdbcTemplate.query(GetAllGroupsSQL, groupRowMapper);
+	public List<Group> getAll() {
+		try {
+			return jdbcTemplate.query(GetAllGroupsSQL, groupRowMapper);
+		} catch (DataAccessException e) {
+			System.err.println("Error fetching all groups: " + e.getMessage());
+			throw new RuntimeException("Failed to fetch groups", e);
+		}
 	}
 }
