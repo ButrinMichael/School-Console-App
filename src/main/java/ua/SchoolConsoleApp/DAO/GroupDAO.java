@@ -20,11 +20,11 @@ public class GroupDAO implements Dao<Group> {
 	private final JdbcTemplate jdbcTemplate;
 
 	private static final String InsertGroupSQL = "INSERT INTO school.GROUPS (group_name) VALUES (?)";
-	private static final String SelectGroupByIdSQL = "SELECT * FROM school.groups WHERE group_id = ?";;
-	private static final String UpdateGroupsSQL = "UPDATE school.groups SET group_name = ? WHERE group_id = ?";;
-	private static final String UpdateStudentsGroupByGroupIdSQL = "UPDATE school.students SET group_id = NULL WHERE group_id = ?";;
-	private static final String DeleteGroupByIdSQL = "DELETE FROM school.groups WHERE group_id = ?";;
-	private static final String GetAllGroupsSQL = "SELECT * FROM school.GROUPS";;
+	private static final String SelectGroupByIdSQL = "SELECT * FROM school.groups WHERE group_id = ?";
+	private static final String UpdateGroupsSQL = "UPDATE school.groups SET group_name = ? WHERE group_id = ?";
+	private static final String UpdateStudentsGroupByGroupIdSQL = "UPDATE school.students SET group_id = NULL WHERE group_id = ?";
+	private static final String DeleteGroupByIdSQL = "DELETE FROM school.groups WHERE group_id = ?";
+	private static final String GetAllGroupsSQL = "SELECT * FROM school.GROUPS";
 
 	@Autowired
 	public GroupDAO(JdbcTemplate jdbcTemplate) {
@@ -69,4 +69,5 @@ public class GroupDAO implements Dao<Group> {
 			throw new RuntimeException("Failed to fetch groups", e);
 		}
 	}
+
 }
