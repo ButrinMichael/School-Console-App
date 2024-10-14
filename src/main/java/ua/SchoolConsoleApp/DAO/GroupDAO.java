@@ -19,12 +19,12 @@ public class GroupDAO implements Dao<Group> {
 
 	private final JdbcTemplate jdbcTemplate;
 
-	private static final String InsertGroupSQL = "INSERT INTO school.GROUPS (group_name) VALUES (?)";
-	private static final String SelectGroupByIdSQL = "SELECT * FROM school.groups WHERE group_id = ?";
-	private static final String UpdateGroupsSQL = "UPDATE school.groups SET group_name = ? WHERE group_id = ?";
-	private static final String UpdateStudentsGroupByGroupIdSQL = "UPDATE school.students SET group_id = NULL WHERE group_id = ?";
-	private static final String DeleteGroupByIdSQL = "DELETE FROM school.groups WHERE group_id = ?";
-	private static final String GetAllGroupsSQL = "SELECT * FROM school.GROUPS";
+	private static final String INSERT_GROUP_SQL = "INSERT INTO school.GROUPS (group_name) VALUES (?)";
+	private static final String SELECT_GROUP_BY_ID_SQL = "SELECT * FROM school.groups WHERE group_id = ?";
+	private static final String UPDATE_GROUPS_SQL = "UPDATE school.groups SET group_name = ? WHERE group_id = ?";
+	private static final String UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL = "UPDATE school.students SET group_id = NULL WHERE group_id = ?";
+	private static final String DELETE_GROUP_BY_ID_SQL = "DELETE FROM school.groups WHERE group_id = ?";
+	private static final String GET_ALL_GROUP_SQL = "SELECT * FROM school.GROUPS";
 
 	@Autowired
 	public GroupDAO(JdbcTemplate jdbcTemplate) {
@@ -41,29 +41,29 @@ public class GroupDAO implements Dao<Group> {
 	};
 
 	@Override
-	public void create(Group group) throws SQLException {
-		jdbcTemplate.update(InsertGroupSQL, group.getName());
+	public void create(Group group) {
+		jdbcTemplate.update(INSERT_GROUP_SQL, group.getName());
 	}
 
-	public Optional<Group> read(int id) throws SQLException {
-		return jdbcTemplate.query(SelectGroupByIdSQL, groupRowMapper, id).stream().findFirst();
+	public Optional<Group> read(int id) {
+		return jdbcTemplate.query(SELECT_GROUP_BY_ID_SQL, groupRowMapper, id).stream().findFirst();
 	}
 
 	@Override
-	public void update(Group group) throws SQLException {
-		jdbcTemplate.update(UpdateGroupsSQL, group.getName(), group.getId());
+	public void update(Group group) {
+		jdbcTemplate.update(UPDATE_GROUPS_SQL, group.getName(), group.getId());
 	}
 
 	@Override
 	@Transactional
-	public void delete(int id) throws SQLException {
-		jdbcTemplate.update(UpdateStudentsGroupByGroupIdSQL, id);
-		jdbcTemplate.update(DeleteGroupByIdSQL, id);
+	public void delete(int id) {
+		jdbcTemplate.update(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL, id);
+		jdbcTemplate.update(DELETE_GROUP_BY_ID_SQL, id);
 	}
 
 	public List<Group> getAll() {
 		try {
-			return jdbcTemplate.query(GetAllGroupsSQL, groupRowMapper);
+			return jdbcTemplate.query(GET_ALL_GROUP_SQL, groupRowMapper);
 		} catch (DataAccessException e) {
 			System.err.println("Error fetching all groups: " + e.getMessage());
 			throw new RuntimeException("Failed to fetch groups", e);

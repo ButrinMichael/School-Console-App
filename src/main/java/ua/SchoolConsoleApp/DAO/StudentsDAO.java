@@ -20,22 +20,22 @@ import java.util.Optional;
 public class StudentsDAO implements Dao<Student> {
 	private final JdbcTemplate jdbcTemplate;
 
-	private static final String InsertStudentSQL = "INSERT INTO school.STUDENTS (group_id, first_name, last_name) VALUES (?, ?, ?)";
-	private static final String UpdateStudentSQL = "UPDATE school.students SET group_id = ?, first_name = ?, last_name = ? WHERE student_id = ?";
-	private static final String DeleteStudentFromStudentCoursesByIdSQL = "DELETE FROM School.STUDENTS_COURSES WHERE student_id = ?";
-	private static final String DeleteStudentByIdSQL = "DELETE FROM school.students WHERE student_id = ?";
-	private static final String SelectStudentByIdSQL = "SELECT * FROM school.students WHERE student_id = ?";
-	private static final String SelectCountStudentsByGroupIdSQL = "SELECT COUNT(*) FROM school.students WHERE group_id = ?";
-	private static final String SelectStudentsByCourseNameSQL = "SELECT s.* FROM school.students s "
+	private static final String INSERT_STUDENT_SQL = "INSERT INTO school.STUDENTS (group_id, first_name, last_name) VALUES (?, ?, ?)";
+	private static final String UPDATE_STUDENT_SQL = "UPDATE school.students SET group_id = ?, first_name = ?, last_name = ? WHERE student_id = ?";
+	private static final String DELETE_STUDENT_FROM_STUDENT_COURSES_BY_ID_SQL = "DELETE FROM School.STUDENTS_COURSES WHERE student_id = ?";
+	private static final String DELETE_STUDENT_BY_ID_SQL = "DELETE FROM school.students WHERE student_id = ?";
+	private static final String SELECT_STUDENT_BY_ID_SQL = "SELECT * FROM school.students WHERE student_id = ?";
+	private static final String SELECT_COUNT_STUDENTS_BY_GROUP_ID_SQL = "SELECT COUNT(*) FROM school.students WHERE group_id = ?";
+	private static final String SELECT_STUDENTS_BY_COURSE_NAME_SQL = "SELECT s.* FROM school.students s "
 			+ "JOIN school.students_courses sc ON s.student_id = sc.student_id "
 			+ "JOIN school.courses c ON sc.course_id = c.course_id " + "WHERE c.course_name = ?";
-	private static final String SelectStudentsIdByNameSQL = "SELECT student_id FROM school.students WHERE first_name = ? AND last_name = ? AND (group_id IS NULL OR group_id IS NOT NULL)";
-	private static final String DeleteStudentFromCurseSQL = "DELETE FROM school.students_courses WHERE student_id = ? AND course_id = ?";
-	private static final String DeleteCourseFromStudentSQL = "DELETE FROM school.students_courses WHERE student_id = ? AND course_id = ?";
-	private static final String InsertCourseToStudentSQL = "INSERT INTO school.students_courses (student_id, course_id) VALUES (?, ?)";
-	private static final String SelectCourseByStudentIdSQL = "SELECT c.* FROM school.courses c "
+	private static final String SELECT_STUDENTS_ID_BY_NAME_SQL = "SELECT student_id FROM school.students WHERE first_name = ? AND last_name = ? AND (group_id IS NULL OR group_id IS NOT NULL)";
+	private static final String DELETE_STUDENT_FROM_CURSE_SQL = "DELETE FROM school.students_courses WHERE student_id = ? AND course_id = ?";
+	private static final String DELETE_COURSE_FROM_STUDENT_SQL = "DELETE FROM school.students_courses WHERE student_id = ? AND course_id = ?";
+	private static final String INSERT_COURSE_TO_STUDENT_SQL = "INSERT INTO school.students_courses (student_id, course_id) VALUES (?, ?)";
+	private static final String SELECT_COURSE_BY_STUDENT_ID_SQL = "SELECT c.* FROM school.courses c "
 			+ "JOIN school.students_courses sc ON c.course_id = sc.course_id " + "WHERE sc.student_id = ?";
-	private static final String SelectStudentByCourseId = "SELECT s.* FROM school.students s "
+	private static final String SELECT_STUDENT_BY_COURSE_ID_SQL = "SELECT s.* FROM school.students s "
 			+ "JOIN school.students_courses sc ON s.student_id = sc.student_id " + "WHERE sc.course_id = ?";
 
 	@Autowired
@@ -65,12 +65,12 @@ public class StudentsDAO implements Dao<Student> {
 
 	@Override
 	public void create(Student student) throws SQLException {
-		jdbcTemplate.update(InsertStudentSQL, student.getGroupId(), student.getFirstName(), student.getLastName());
+		jdbcTemplate.update(INSERT_STUDENT_SQL, student.getGroupId(), student.getFirstName(), student.getLastName());
 	}
 
 	@Override
 	public void update(Student student) {
-		jdbcTemplate.update(UpdateStudentSQL, student.getGroupId(), student.getFirstName(), student.getLastName(),
+		jdbcTemplate.update(UPDATE_STUDENT_SQL, student.getGroupId(), student.getFirstName(), student.getLastName(),
 				student.getId());
 	}
 
@@ -78,8 +78,8 @@ public class StudentsDAO implements Dao<Student> {
 	@Transactional
 	public void delete(int id) {
 		try {
-			jdbcTemplate.update(DeleteStudentFromStudentCoursesByIdSQL, id);
-			jdbcTemplate.update(DeleteStudentByIdSQL, id);
+			jdbcTemplate.update(DELETE_STUDENT_FROM_STUDENT_COURSES_BY_ID_SQL, id);
+			jdbcTemplate.update(DELETE_STUDENT_BY_ID_SQL, id);
 		} catch (DataAccessException e) {
 			System.err.println("Error deleting student with ID " + id + ": " + e.getMessage());
 			throw new RuntimeException("Failed to delete student", e);
@@ -91,7 +91,7 @@ public class StudentsDAO implements Dao<Student> {
 	@Override
 	public Optional<Student> read(int id) {
 		try {
-			List<Student> students = jdbcTemplate.query(SelectStudentByIdSQL, studentRowMapper, id);
+			List<Student> students = jdbcTemplate.query(SELECT_STUDENT_BY_ID_SQL, studentRowMapper, id);
 			if (students.isEmpty()) {
 
 				System.out.println("Student with ID " + id + " does not exist.");
@@ -106,12 +106,12 @@ public class StudentsDAO implements Dao<Student> {
 
 	@Override
 	public List<Student> getAll() {
-		return jdbcTemplate.query(SelectStudentByIdSQL, studentRowMapper);
+		return jdbcTemplate.query(SELECT_STUDENT_BY_ID_SQL, studentRowMapper);
 	}
 
 	public int getNumStudentsInGroup(int groupId) {
 		try {
-			return jdbcTemplate.queryForObject(SelectCountStudentsByGroupIdSQL, Integer.class, groupId);
+			return jdbcTemplate.queryForObject(SELECT_COUNT_STUDENTS_BY_GROUP_ID_SQL, Integer.class, groupId);
 		} catch (EmptyResultDataAccessException e) {
 			System.err.println("No students found for group with ID " + groupId);
 			return 0;
@@ -124,7 +124,7 @@ public class StudentsDAO implements Dao<Student> {
 
 	public List<Student> getStudentsByCourseName(String courseName) {
 		try {
-			return jdbcTemplate.query(SelectStudentsByCourseNameSQL, studentRowMapper, courseName);
+			return jdbcTemplate.query(SELECT_STUDENTS_BY_COURSE_NAME_SQL, studentRowMapper, courseName);
 		} catch (DataAccessException e) {
 			System.err.println("Failed to retrieve students for course name \"" + courseName + "\": " + e.getMessage());
 			return Collections.emptyList();
@@ -133,7 +133,7 @@ public class StudentsDAO implements Dao<Student> {
 
 	public int getStudentIdByName(String firstName, String lastName) {
 		try {
-			return jdbcTemplate.queryForObject(SelectStudentsIdByNameSQL, Integer.class, firstName, lastName);
+			return jdbcTemplate.queryForObject(SELECT_STUDENTS_ID_BY_NAME_SQL, Integer.class, firstName, lastName);
 		} catch (EmptyResultDataAccessException e) {
 			System.err.println("The student with the specified name and surname was not found.");
 			return -1;
@@ -144,7 +144,7 @@ public class StudentsDAO implements Dao<Student> {
 	}
 
 	public void removeStudentFromCourse(int studentId, int courseId) {
-		int rowsAffected = jdbcTemplate.update(DeleteStudentFromCurseSQL, studentId, courseId);
+		int rowsAffected = jdbcTemplate.update(DELETE_STUDENT_FROM_CURSE_SQL, studentId, courseId);
 		if (rowsAffected > 0) {
 			System.out.println("Student successfully removed from the course!");
 		} else {
@@ -153,7 +153,7 @@ public class StudentsDAO implements Dao<Student> {
 	}
 
 	public void removeCourseFromStudent(int studentId, int courseId) {
-		int rowsAffected = jdbcTemplate.update(DeleteCourseFromStudentSQL, studentId, courseId);
+		int rowsAffected = jdbcTemplate.update(DELETE_COURSE_FROM_STUDENT_SQL, studentId, courseId);
 		if (rowsAffected > 0) {
 			System.out.println("Course successfully removed from the student!");
 		} else {
@@ -162,14 +162,14 @@ public class StudentsDAO implements Dao<Student> {
 	}
 
 	public int addCourseToStudent(int studentId, int courseId) {
-		return jdbcTemplate.update(InsertCourseToStudentSQL, studentId, courseId);
+		return jdbcTemplate.update(INSERT_COURSE_TO_STUDENT_SQL, studentId, courseId);
 	}
 
 	public List<Course> getCoursesByStudentId(int studentId) {
-		return jdbcTemplate.query(SelectCourseByStudentIdSQL, courseRowMapper, studentId);
+		return jdbcTemplate.query(SELECT_COURSE_BY_STUDENT_ID_SQL, courseRowMapper, studentId);
 	}
 
 	public List<Student> getStudentsByCourseId(int courseId) {
-		return jdbcTemplate.query(SelectStudentByCourseId, studentRowMapper, courseId);
+		return jdbcTemplate.query(SELECT_STUDENT_BY_COURSE_ID_SQL, studentRowMapper, courseId);
 	}
 }

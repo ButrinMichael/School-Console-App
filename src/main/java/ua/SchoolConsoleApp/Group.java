@@ -48,5 +48,5 @@ public class Group {
 		Group other = (Group) obj;
 		return id == other.id && Objects.equals(name, other.name);
 	}
-	
+
 }

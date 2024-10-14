@@ -31,10 +31,10 @@ public class Student {
 	public void setId(int id) {
 		this.id = id;
 	}
-	public Integer getGroupId() {
-	    return groupId;
-	}
 
+	public Integer getGroupId() {
+		return groupId;
+	}
 
 	public String getFirstName() {
 		return firstName;

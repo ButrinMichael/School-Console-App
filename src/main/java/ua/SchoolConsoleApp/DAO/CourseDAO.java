@@ -18,17 +18,17 @@ import java.util.Optional;
 public class CourseDAO implements Dao<Course> {
 	private final JdbcTemplate jdbcTemplate;
 
-	private static final String InsertCourseSQL = "INSERT INTO school.COURSES (course_name, course_description) VALUES (?, ?)";
-	private static final String SelectCoursByIdSQL = "SELECT * FROM school.courses WHERE course_id = ?";
-	private static final String UpdateCourseSQL = "UPDATE school.courses SET course_name = ?, course_description = ? WHERE course_id = ?";;
-	private static final String DeleteStudentCourseSQL = "DELETE FROM School.STUDENTS_COURSES WHERE course_id = ?";;
-	private static final String DeleteCourseSQL = "DELETE FROM School.COURSES WHERE course_id = ?";;
-	private static final String SelectAllCoursesSQL = "SELECT * FROM school.COURSES";
-	private static final String SelectCourseIdByNameSQL = "SELECT course_id FROM school.COURSES WHERE course_name = ?";
-	private static final String CheckStudentEnrollmentSQL = "SELECT COUNT(*) FROM School.STUDENTS_COURSES WHERE student_id = ? AND course_id = ?";
-	private static final String SelectCourseByStudentIdSQL = "SELECT c.course_id, c.course_name, c.course_description FROM school.courses c "
-			+ "INNER JOIN school.students_courses sc ON c.course_id = sc.course_id " + "WHERE sc.student_id = ?";;
-	private static final String AssignCourseSQL = "INSERT INTO School.STUDENTS_COURSES (student_id, course_id) VALUES (?, ?)";
+	private static final String INSERT_COURSE_SQL = "INSERT INTO school.COURSES (course_name, course_description) VALUES (?, ?)";
+	private static final String SELECT_COURS_BY_ID_SQL = "SELECT * FROM school.courses WHERE course_id = ?";
+	private static final String UPDATE_COURSE_SQL = "UPDATE school.courses SET course_name = ?, course_description = ? WHERE course_id = ?";
+	private static final String DELETE_STUDENT_COURSE_SQL = "DELETE FROM School.STUDENTS_COURSES WHERE course_id = ?";
+	private static final String DELETE_COURSE_SQL = "DELETE FROM School.COURSES WHERE course_id = ?";
+	private static final String SELECT_ALL_COURSES_SQL = "SELECT * FROM school.COURSES";
+	private static final String SELECT_COURSE_ID_BY_NAME_SQL = "SELECT course_id FROM school.COURSES WHERE course_name = ?";
+	private static final String CHECK_STUDENTENROLLMENT_SQL = "SELECT COUNT(*) FROM School.STUDENTS_COURSES WHERE student_id = ? AND course_id = ?";
+	private static final String SELECT_COURSE_BY_STUDENT_ID_SQL = "SELECT c.course_id, c.course_name, c.course_description FROM school.courses c "
+			+ "INNER JOIN school.students_courses sc ON c.course_id = sc.course_id " + "WHERE sc.student_id = ?";
+	private static final String ASSIGN_COURSE_SQL = "INSERT INTO School.STUDENTS_COURSES (student_id, course_id) VALUES (?, ?)";
 
 	@Autowired
 	public CourseDAO(JdbcTemplate jdbcTemplate) {
@@ -47,31 +47,31 @@ public class CourseDAO implements Dao<Course> {
 	};
 
 	@Override
-	public void create(Course course) throws SQLException {
-		jdbcTemplate.update(InsertCourseSQL, course.getName(), course.getDescription());
+	public void create(Course course) {
+		jdbcTemplate.update(INSERT_COURSE_SQL, course.getName(), course.getDescription());
 	}
 
 	@Override
-	public Optional<Course> read(int id) throws SQLException {
-		return jdbcTemplate.query(SelectCoursByIdSQL, courseRowMapper, id).stream().findFirst();
+	public Optional<Course> read(int id) {
+		return jdbcTemplate.query(SELECT_COURS_BY_ID_SQL, courseRowMapper, id).stream().findFirst();
 	}
 
 	@Override
-	public void update(Course course) throws SQLException {
-		jdbcTemplate.update(UpdateCourseSQL, course.getName(), course.getDescription(), course.getId());
+	public void update(Course course) {
+		jdbcTemplate.update(UPDATE_COURSE_SQL, course.getName(), course.getDescription(), course.getId());
 	}
 
 	@Override
 	@Transactional
-	public void delete(int id) throws SQLException {
-		jdbcTemplate.update(DeleteStudentCourseSQL, id);
-		jdbcTemplate.update(DeleteCourseSQL, id);
+	public void delete(int id) {
+		jdbcTemplate.update(DELETE_STUDENT_COURSE_SQL, id);
+		jdbcTemplate.update(DELETE_COURSE_SQL, id);
 	}
 
 	@Override
 	public List<Course> getAll() {
 		try {
-			return jdbcTemplate.query(SelectAllCoursesSQL, courseRowMapper);
+			return jdbcTemplate.query(SELECT_ALL_COURSES_SQL, courseRowMapper);
 		} catch (DataAccessException e) {
 			System.err.println("Error fetching all courses: " + e.getMessage());
 			throw new RuntimeException("Failed to fetch courses", e);
@@ -80,7 +80,7 @@ public class CourseDAO implements Dao<Course> {
 
 	public int getCourseIdByName(String courseName) {
 		try {
-			return jdbcTemplate.queryForObject(SelectCourseIdByNameSQL, Integer.class, courseName);
+			return jdbcTemplate.queryForObject(SELECT_COURSE_ID_BY_NAME_SQL, Integer.class, courseName);
 		} catch (EmptyResultDataAccessException e) {
 			System.err.println("Course with name \"" + courseName + "\" not found.");
 			return -1;
@@ -92,7 +92,7 @@ public class CourseDAO implements Dao<Course> {
 
 	public boolean isStudentEnrolled(int studentId, int courseId) {
 		try {
-			int count = jdbcTemplate.queryForObject(CheckStudentEnrollmentSQL, Integer.class, studentId, courseId);
+			int count = jdbcTemplate.queryForObject(CHECK_STUDENTENROLLMENT_SQL, Integer.class, studentId, courseId);
 			return count > 0;
 		} catch (EmptyResultDataAccessException e) {
 			return false;
@@ -104,7 +104,7 @@ public class CourseDAO implements Dao<Course> {
 
 	public List<Course> getCoursesByStudentId(int studentId) {
 		try {
-			return jdbcTemplate.query(SelectCourseByStudentIdSQL, courseRowMapper, studentId);
+			return jdbcTemplate.query(SELECT_COURSE_BY_STUDENT_ID_SQL, courseRowMapper, studentId);
 		} catch (DataAccessException e) {
 			System.err.println("Error retrieving courses for student with ID " + studentId + ": " + e.getMessage());
 			throw new RuntimeException("Failed to retrieve courses for the student", e);
@@ -112,7 +112,8 @@ public class CourseDAO implements Dao<Course> {
 	}
 
 	@Transactional
-	public void assignCourse(int studentId, int courseId) throws SQLException {
-		jdbcTemplate.update(AssignCourseSQL, studentId, courseId);
+	public void assignCourse(int studentId, int courseId) {
+		jdbcTemplate.update(ASSIGN_COURSE_SQL, studentId, courseId);
 	}
+
 }
