@@ -209,27 +209,27 @@ public class StudentsDaoTest {
         verify(jdbcTemplate, times(1)).queryForObject(SELECT_COUNT_STUDENTS_BY_GROUP_ID_SQL, Integer.class, testStudent.getGroupId());
     }
 
-//	@Test
-//    public void getStudentsByCourseName_shouldReturnStudents_whenCourseNameExists() {
-//		String courseName = "Art";
-//	    Student student1 = new Student(1,1, "John", "Doe");
-//	    Student student2 = new Student(2,1, "Jane", "Smith");
-//	    List<Student> expectedStudents = List.of(student1, student2);
-//
-//	    System.out.println("SQL Query: " + SELECT_STUDENTS_BY_COURSE_NAME_SQL);
-//	    System.out.println("RowMapper: " + studentRowMapper);
-//	    System.out.println("Course Name: " + courseName);
-//	    when(jdbcTemplate.query(eq(SELECT_STUDENTS_BY_COURSE_NAME_SQL), eq(studentRowMapper), eq(courseName)))
-//        .thenReturn(expectedStudents);
-//	    
-//	    System.out.println(studentsDAO.getStudentsByCourseName("Art"));
-//
-//	    List<Student> result = studentsDAO.getStudentsByCourseName(courseName);
-//	    assertEquals(expectedStudents, result);
-//	    
-//	    assertEquals(2, result.size());
-//	    verify(jdbcTemplate, times(1)).query(eq(SELECT_STUDENTS_BY_COURSE_NAME_SQL), eq(studentRowMapper), eq(courseName));
-//	}
+	@Test
+    public void getStudentsByCourseName_shouldReturnStudents_whenCourseNameExists() {
+		String courseName = "Art";
+	    Student student1 = new Student(1,1, "John", "Doe");
+	    Student student2 = new Student(2,1, "Jane", "Smith");
+	    List<Student> expectedStudents = List.of(student1, student2);
+
+	    System.out.println("SQL Query: " + SELECT_STUDENTS_BY_COURSE_NAME_SQL);
+	    System.out.println("RowMapper: " + studentRowMapper);
+	    System.out.println("Course Name: " + courseName);
+	    when(jdbcTemplate.query(eq(SELECT_STUDENTS_BY_COURSE_NAME_SQL), eq(studentRowMapper), eq(courseName)))
+        .thenReturn(expectedStudents);
+	    
+	    System.out.println(studentsDAO.getStudentsByCourseName("Art"));
+
+	    List<Student> result = studentsDAO.getStudentsByCourseName(courseName);
+	    assertEquals(expectedStudents, result);
+	    
+	    assertEquals(2, result.size());
+	    verify(jdbcTemplate, times(1)).query(eq(SELECT_STUDENTS_BY_COURSE_NAME_SQL), eq(studentRowMapper), eq(courseName));
+	}
 
 	@Test
     public void getStudentsByCourseName_shouldReturnEmptyList_whenNoStudentsFound() {
@@ -244,16 +244,16 @@ public class StudentsDaoTest {
         verify(jdbcTemplate, times(1)).query(eq(SELECT_STUDENTS_BY_COURSE_NAME_SQL), eq(studentRowMapper), eq(courseName));
     }
 
-//    @Test
-//    public void getStudentsByCourseName_shouldReturnEmptyList_whenDataAccessExceptionOccurs() {
-//        String courseName = "Science";
-//
-//        when(jdbcTemplate.query(eq(SELECT_STUDENTS_BY_COURSE_NAME_SQL), eq(studentRowMapper), eq(courseName)))
-//                .thenThrow(new DataAccessException("Database error") {});
-//
-//        List<Student> result = studentsDAO.getStudentsByCourseName(courseName);
-//
-//        assertTrue(result.isEmpty());
-//        verify(jdbcTemplate, times(1)).query(eq(SELECT_STUDENTS_BY_COURSE_NAME_SQL), eq(studentRowMapper), eq(courseName));
-//    }
+    @Test
+    public void getStudentsByCourseName_shouldReturnEmptyList_whenDataAccessExceptionOccurs() {
+        String courseName = "Science";
+
+        when(jdbcTemplate.query(eq(SELECT_STUDENTS_BY_COURSE_NAME_SQL), eq(studentRowMapper), eq(courseName)))
+                .thenThrow(new DataAccessException("Database error") {});
+
+        List<Student> result = studentsDAO.getStudentsByCourseName(courseName);
+
+        assertTrue(result.isEmpty());
+        verify(jdbcTemplate, times(1)).query(eq(SELECT_STUDENTS_BY_COURSE_NAME_SQL), eq(studentRowMapper), eq(courseName));
+    }
 }
