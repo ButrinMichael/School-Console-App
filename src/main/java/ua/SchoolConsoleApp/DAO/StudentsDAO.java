@@ -64,7 +64,7 @@ public class StudentsDAO implements Dao<Student> {
 	};
 
 	@Override
-	public void create(Student student) throws SQLException {
+	public void create(Student student) {
 		jdbcTemplate.update(INSERT_STUDENT_SQL, student.getGroupId(), student.getFirstName(), student.getLastName());
 	}
 
@@ -74,23 +74,28 @@ public class StudentsDAO implements Dao<Student> {
 				student.getId());
 	}
 
+//	@Override
+//	@Transactional
+//	public void delete(int id) {
+//		try {
+//			jdbcTemplate.update(DELETE_STUDENT_FROM_STUDENT_COURSES_BY_ID_SQL, id);
+//			jdbcTemplate.update(DELETE_STUDENT_BY_ID_SQL, id);
+//		} catch (DataAccessException e) {
+//			System.err.println("Error deleting student with ID " + id + ": " + e.getMessage());
+//			throw new RuntimeException("Failed to delete student", e);
+//		} catch (RuntimeException e) {
+//			System.out.println("Failed to delete student: " + e.getMessage() + " Please try again.");
+//		}
+//	}
 	@Override
 	@Transactional
-	public void delete(int id) {
-		try {
+	public void delete(int id) {		
 			jdbcTemplate.update(DELETE_STUDENT_FROM_STUDENT_COURSES_BY_ID_SQL, id);
-			jdbcTemplate.update(DELETE_STUDENT_BY_ID_SQL, id);
-		} catch (DataAccessException e) {
-			System.err.println("Error deleting student with ID " + id + ": " + e.getMessage());
-			throw new RuntimeException("Failed to delete student", e);
-		} catch (RuntimeException e) {
-			System.out.println("Failed to delete student: " + e.getMessage() + " Please try again.");
-		}
+			jdbcTemplate.update(DELETE_STUDENT_BY_ID_SQL, id);		
 	}
-
 	@Override
 	public Optional<Student> read(int id) {
-		try {
+		
 			List<Student> students = jdbcTemplate.query(SELECT_STUDENT_BY_ID_SQL, studentRowMapper, id);
 			if (students.isEmpty()) {
 
@@ -98,11 +103,7 @@ public class StudentsDAO implements Dao<Student> {
 				return Optional.empty();
 			}
 			return Optional.of(students.get(0));
-		} catch (DataAccessException e) {
-			System.err.println("Error fetching student with ID " + id + ": " + e.getMessage());
-			throw new RuntimeException("Failed to fetch student", e);
-		}
-	}
+		} 
 
 	@Override
 	public List<Student> getAll() {

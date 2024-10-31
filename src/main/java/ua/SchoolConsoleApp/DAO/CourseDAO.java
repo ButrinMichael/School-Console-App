@@ -70,13 +70,8 @@ public class CourseDAO implements Dao<Course> {
 
 	@Override
 	public List<Course> getAll() {
-		try {
 			return jdbcTemplate.query(SELECT_ALL_COURSES_SQL, courseRowMapper);
-		} catch (DataAccessException e) {
-			System.err.println("Error fetching all courses: " + e.getMessage());
-			throw new RuntimeException("Failed to fetch courses", e);
-		}
-	}
+			}
 
 	public int getCourseIdByName(String courseName) {
 		try {

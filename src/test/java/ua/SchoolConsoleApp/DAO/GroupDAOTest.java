@@ -20,7 +20,12 @@ import ua.SchoolConsoleApp.Group;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupDAOTest {
-
+	private static final String INSERT_GROUP_SQL = "INSERT INTO school.GROUPS (group_name) VALUES (?)";
+	private static final String SELECT_GROUP_BY_ID_SQL = "SELECT * FROM school.groups WHERE group_id = ?";
+	private static final String UPDATE_GROUPS_SQL = "UPDATE school.groups SET group_name = ? WHERE group_id = ?";
+	private static final String UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL = "UPDATE school.students SET group_id = NULL WHERE group_id = ?";
+	private static final String DELETE_GROUP_BY_ID_SQL = "DELETE FROM school.groups WHERE group_id = ?";
+	private static final String GET_ALL_GROUP_SQL = "SELECT * FROM school.GROUPS";
 	@Mock
 	private JdbcTemplate jdbcTemplate;
 
@@ -41,53 +46,57 @@ public class GroupDAOTest {
 
         groupDAO.create(testGroup);
      
-        verify(jdbcTemplate, times(1)).update("INSERT INTO school.GROUPS (group_name) VALUES (?)", "Test Group");
+        verify(jdbcTemplate, times(1)).update(INSERT_GROUP_SQL, "Test Group");
     }
 
 	@Test
 	public void create_shouldReturnDataAccessException(){	    
 	    when(jdbcTemplate.update(anyString(), anyString()))
 	            .thenThrow(new DataAccessException("Database error") {});    
-	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	    DataAccessException exception = assertThrows(DataAccessException.class, () -> {
 	        groupDAO.create(testGroup);
 	    });
 	    assertEquals("Database error", exception.getMessage());
-	    verify(jdbcTemplate, times(1)).update(eq("INSERT INTO school.GROUPS (group_name) VALUES (?)"), eq(testGroup.getName()));
+	    verify(jdbcTemplate, times(1)).update(eq(INSERT_GROUP_SQL), eq(testGroup.getName()));
 	}
 
 	@Test
-	public void read_shouldReturnResult_whenGroupFound(){		
-		when(jdbcTemplate.query(eq("SELECT * FROM school.groups WHERE group_id = ?"), any(RowMapper.class), eq(1)))
-				.thenReturn(Collections.singletonList(testGroup));
-		Optional<Group> result = groupDAO.read(1);
-		assertTrue(result.isPresent());
-		assertEquals("Test Group", result.get().getName());
-		verify(jdbcTemplate, times(1)).query(eq("SELECT * FROM school.groups WHERE group_id = ?"),any(RowMapper.class),eq(1));
+	public void read_shouldReturnResult_whenGroupFound() {
+	    // Arrange
+	    when(jdbcTemplate.query(eq(SELECT_GROUP_BY_ID_SQL), any(RowMapper.class), eq(1)))
+	            .thenReturn(Collections.singletonList(testGroup));
+	    Optional<Group> result = groupDAO.read(1);
+	    assertTrue(result.isPresent(), "Expected a group to be present in the Optional");
+	    Group actualGroup = result.get();
+	    assertEquals(testGroup.getId(), actualGroup.getId(), "Group IDs should match");
+	    assertEquals(testGroup.getName(), actualGroup.getName(), "Group names should match");
+	    verify(jdbcTemplate, times(1)).query(eq(SELECT_GROUP_BY_ID_SQL), any(RowMapper.class), eq(1));
 	}
-
+	
 	@Test
 	public void read_shouldReturnDataAccessException(){	    
 	    when(jdbcTemplate.query(anyString(), any(RowMapper.class), anyInt()))
 	            .thenThrow(new DataAccessException("Failed to read group") {});    
-	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	    DataAccessException exception = assertThrows(DataAccessException.class, () -> {
 	        groupDAO.read(1);
 	    });
 	    assertEquals("Failed to read group", exception.getMessage());
-	    verify(jdbcTemplate, times(1)).query(eq("SELECT * FROM school.groups WHERE group_id = ?"), any(RowMapper.class), eq(1));
+	    verify(jdbcTemplate, times(1)).query(eq(SELECT_GROUP_BY_ID_SQL), any(RowMapper.class), eq(1));
 	}
 
 	@Test
 	public void read_shouldReturnEmtyGroup_whenGroupNotFound() {
 	    when(jdbcTemplate.query(anyString(), any(RowMapper.class), anyInt())).thenReturn(Collections.emptyList());
 	    Optional<Group> result = groupDAO.read(1);
-	    assertFalse(result.isPresent());
-	    verify(jdbcTemplate, times(1)).query(eq("SELECT * FROM school.groups WHERE group_id = ?"), any(RowMapper.class),eq(1));
+	    assertFalse(result.isPresent(), "Expected Optional to be empty when no group is found");
+	    verify(jdbcTemplate, times(1)).query(eq(SELECT_GROUP_BY_ID_SQL), any(RowMapper.class),eq(1));
 	}
+
 
 	@Test
 	public void update_schouldUpdateGroup() {
 		groupDAO.update(testGroup);
-		verify(jdbcTemplate, times(1)).update("UPDATE school.groups SET group_name = ? WHERE group_id = ?",
+		verify(jdbcTemplate, times(1)).update(UPDATE_GROUPS_SQL,
 				testGroup.getName(), testGroup.getId());
 	}
 
@@ -102,19 +111,19 @@ public class GroupDAOTest {
 	public void update_shouldReturnDataAccessException() {
 	    when(jdbcTemplate.update(anyString(), anyString(), anyInt())).thenThrow(new DataAccessException("Database error") {});
 	    
-	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	    DataAccessException exception = assertThrows(DataAccessException.class, () -> {
 	        groupDAO.update(testGroup);
 	    });	
-	    
 	    assertEquals("Database error",  exception.getMessage());
-	    verify(jdbcTemplate, times(1)).update(eq("UPDATE school.groups SET group_name = ? WHERE group_id = ?"),eq(testGroup.getName()), eq(testGroup.getId()));
+	    verify(jdbcTemplate, times(1)).update(eq(UPDATE_GROUPS_SQL),eq(testGroup.getName()), eq(testGroup.getId()));
 		}
+
 
 	@Test
 	public void delete_schouldDeleteGroup() {
 		groupDAO.delete(1);
-		verify(jdbcTemplate, times(1)).update("DELETE FROM school.groups WHERE group_id = ?", 1);
-		verify(jdbcTemplate, times(1)).update("UPDATE school.students SET group_id = NULL WHERE group_id = ?", 1);
+		verify(jdbcTemplate, times(1)).update(DELETE_GROUP_BY_ID_SQL, 1);
+		verify(jdbcTemplate, times(1)).update(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL, 1);
 
 	}
 
@@ -122,50 +131,57 @@ public class GroupDAOTest {
 	public void delete_schouldDoNothing_whenGroupWithNonExistingId() {	    
 	    when(jdbcTemplate.update(anyString(), eq(999999999))).thenReturn(0);
 	    groupDAO.delete(999999999);
-	    verify(jdbcTemplate, times(1)).update(eq("UPDATE school.students SET group_id = NULL WHERE group_id = ?"), eq(999999999));
-	    verify(jdbcTemplate, times(1)).update(eq("DELETE FROM school.groups WHERE group_id = ?"), eq(999999999));
+	    verify(jdbcTemplate, times(1)).update(eq(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL), eq(999999999));
+	    verify(jdbcTemplate, times(1)).update(eq(DELETE_GROUP_BY_ID_SQL), eq(999999999));
 	}
 
 	@Test
 	public void delete_schouldPerformInOrder() {
 		groupDAO.delete(1);
 		InOrder inOrder = inOrder(jdbcTemplate);
-		inOrder.verify(jdbcTemplate).update("UPDATE school.students SET group_id = NULL WHERE group_id = ?", 1);
-		inOrder.verify(jdbcTemplate).update("DELETE FROM school.groups WHERE group_id = ?", 1);
+		inOrder.verify(jdbcTemplate).update(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL, 1);
+		inOrder.verify(jdbcTemplate).update(DELETE_GROUP_BY_ID_SQL, 1);
 	}
 
 	@Test
 	public void delete_shouldThrowDataAccessException() {	   
-	    when(jdbcTemplate.update(eq("UPDATE school.students SET group_id = NULL WHERE group_id = ?"), eq(1)))
+	    when(jdbcTemplate.update(eq(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL), eq(1)))
 	            .thenThrow(new DataAccessException("Database error") {});
-	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	    DataAccessException exception = assertThrows(DataAccessException.class, () -> {
 	        groupDAO.delete(1);
 	    });
 	    assertEquals("Database error", exception.getMessage());
-	    verify(jdbcTemplate, times(1)).update(eq("UPDATE school.students SET group_id = NULL WHERE group_id = ?"), eq(1));
-	    verify(jdbcTemplate, times(0)).update(eq("DELETE FROM school.groups WHERE group_id = ?"), eq(1));
+	    verify(jdbcTemplate, times(1)).update(eq(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL), eq(1));
+	    verify(jdbcTemplate, times(0)).update(eq(DELETE_GROUP_BY_ID_SQL), eq(1));
 	}
 
 	@Test
-	public void delete_shouldReturnResult_WithDifferentIdValues() {
+	public void delete_shouldDeleteCourse_WithPositiveId() {
 		groupDAO.delete(1);
-		verify(jdbcTemplate).update("UPDATE school.students SET group_id = NULL WHERE group_id = ?", 1);
-		verify(jdbcTemplate).update("DELETE FROM school.groups WHERE group_id = ?", 1);
-		groupDAO.delete(0);
-		verify(jdbcTemplate).update("UPDATE school.students SET group_id = NULL WHERE group_id = ?", 0);
-		verify(jdbcTemplate).update("DELETE FROM school.groups WHERE group_id = ?", 0);
-		groupDAO.delete(-1);
-		verify(jdbcTemplate).update("UPDATE school.students SET group_id = NULL WHERE group_id = ?", -1);
-		verify(jdbcTemplate).update("DELETE FROM school.groups WHERE group_id = ?", -1);
+		verify(jdbcTemplate).update(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL, 1);
+		verify(jdbcTemplate).update(DELETE_GROUP_BY_ID_SQL, 1);
 	}
 
+	@Test
+	public void delete_shouldDeleteCourse_WithZeroId() {
+		groupDAO.delete(0);
+		verify(jdbcTemplate).update(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL, 0);
+		verify(jdbcTemplate).update(DELETE_GROUP_BY_ID_SQL, 0);
+	}
+
+	@Test
+	public void delete_shouldDeleteCourse_WithNegativeId() {
+		groupDAO.delete(-1);
+		verify(jdbcTemplate).update(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL, -1);
+		verify(jdbcTemplate).update(DELETE_GROUP_BY_ID_SQL, -1);
+	}
 	@Test
 	public void getAll_schouldReturnGroupList() {
 	    when(jdbcTemplate.query(anyString(), any(RowMapper.class))).thenReturn(Collections.singletonList(testGroup));
 	    List<Group> result = groupDAO.getAll();
 	    assertEquals(1, result.size());
 	    assertEquals("Test Group", result.get(0).getName());
-	    verify(jdbcTemplate, times(1)).query(eq("SELECT * FROM school.GROUPS"), any(RowMapper.class));
+	    verify(jdbcTemplate, times(1)).query(eq(GET_ALL_GROUP_SQL), any(RowMapper.class));
 	}
 
 	@Test
@@ -176,6 +192,6 @@ public class GroupDAOTest {
 	        groupDAO.getAll();
 	    });
 	    assertEquals("Failed to fetch groups", exception.getMessage());
-	    verify(jdbcTemplate, times(1)).query(eq("SELECT * FROM school.GROUPS"), any(RowMapper.class));
+	    verify(jdbcTemplate, times(1)).query(eq(GET_ALL_GROUP_SQL), any(RowMapper.class));
 	}
 }

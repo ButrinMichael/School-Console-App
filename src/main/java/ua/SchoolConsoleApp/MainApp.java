@@ -175,12 +175,8 @@ public class MainApp implements CommandLineRunner {
 
 		Student student = new Student(firstName, lastName);
 
-		try {
-			studentsDAO.create(student);
-			System.out.println("The student has been successfully added.");
-		} catch (SQLException e) {
-			System.err.println("Failed to add new student: " + e.getMessage());
-		}
+		studentsDAO.create(student);
+		System.out.println("The student has been successfully added.");
 	}
 
 	private void deleteStudent() {
