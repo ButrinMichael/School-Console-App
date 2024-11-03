@@ -74,19 +74,6 @@ public class StudentsDAO implements Dao<Student> {
 				student.getId());
 	}
 
-//	@Override
-//	@Transactional
-//	public void delete(int id) {
-//		try {
-//			jdbcTemplate.update(DELETE_STUDENT_FROM_STUDENT_COURSES_BY_ID_SQL, id);
-//			jdbcTemplate.update(DELETE_STUDENT_BY_ID_SQL, id);
-//		} catch (DataAccessException e) {
-//			System.err.println("Error deleting student with ID " + id + ": " + e.getMessage());
-//			throw new RuntimeException("Failed to delete student", e);
-//		} catch (RuntimeException e) {
-//			System.out.println("Failed to delete student: " + e.getMessage() + " Please try again.");
-//		}
-//	}
 	@Override
 	@Transactional
 	public void delete(int id) {		
@@ -173,4 +160,5 @@ public class StudentsDAO implements Dao<Student> {
 	public List<Student> getStudentsByCourseId(int courseId) {
 		return jdbcTemplate.query(SELECT_STUDENT_BY_COURSE_ID_SQL, studentRowMapper, courseId);
 	}
+
 }
