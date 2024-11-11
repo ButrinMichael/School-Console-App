@@ -104,41 +104,41 @@ public class MainApp implements CommandLineRunner {
 	}
 
 	public List<Group> findGroupsWithLessOrEqualStudents() {
-		List<Group> result = new ArrayList<>();
-		System.out.println("Enter the maximum number of students:");
-		int maxStudents;
-		try {
-			maxStudents = scanner.nextInt();
-		} catch (InputMismatchException e) {
-			System.err.println("Invalid input. Please enter a valid integer.");
-			scanner.nextLine();
-			findGroupsWithLessOrEqualStudents();
-			return result;
-		}
-		try {
-			List<Group> allGroups = groupDAO.getAll();
-			for (Group group : allGroups) {
-				int numStudents = studentsDAO.getNumStudentsInGroup(group.getId());
-				if (numStudents <= maxStudents) {
-					result.add(group);
-				}
-			}
+	    List<Group> result = new ArrayList<>();
+	    int maxStudents = -1;
+	    
+	    while (maxStudents == -1) {
+	        System.out.println("Enter the maximum number of students:");
+	        try {
+	            maxStudents = scanner.nextInt();
+	        } catch (InputMismatchException e) {
+	            System.err.println("Invalid input. Please enter a valid integer.");
+	            scanner.nextLine(); 
+	        }
+	    }
 
-			if (result.isEmpty()) {
-				System.out.println("Groups not found.");
-			} else {
-				System.out.println("Groups with number of students less than or equal to " + maxStudents + ":");
-				for (Group group : result) {
-					System.out.println(group);
-				}
-			}
-		} catch (RuntimeException e) {
-			System.err.println("Failed to find groups: " + e.getMessage());
-		}
-		return result;
+	    try {
+	        List<Group> allGroups = groupDAO.getAll();
+	        for (Group group : allGroups) {
+	            int numStudents = studentsDAO.getNumStudentsInGroup(group.getId());
+	            if (numStudents <= maxStudents) {
+	                result.add(group);
+	            }
+	        }
 
+	        if (result.isEmpty()) {
+	            System.out.println("Groups not found.");
+	        } else {
+	            System.out.println("Groups with number of students less than or equal to " + maxStudents + ":");
+	            for (Group group : result) {
+	                System.out.println(group);
+	            }
+	        }
+	    } catch (RuntimeException e) {
+	        System.err.println("Failed to find groups: " + e.getMessage());
+	    }
+	    return result;
 	}
-
 	public List<Student> findStudentsByCourseName() {
 		List<Student> result = new ArrayList<>();
 		System.out.println("Enter the name of the course:");
@@ -167,29 +167,36 @@ public class MainApp implements CommandLineRunner {
 		return result;
 	}
 
-	private void addNewStudent() {
+	public void addNewStudent() {
 		System.out.println("Enter the student's name:");
 		String firstName = scanner.nextLine();
+		if (firstName.isEmpty()) {
+	        System.out.println("Name cannot be empty.");
+	        return;
+	    }
 		System.out.println("Enter the student's surname:");
 		String lastName = scanner.nextLine();
-
+		if (lastName.isEmpty()) {
+	        System.out.println("Surname cannot be empty.");
+	        return;
+	    }
 		Student student = new Student(firstName, lastName);
 
 		studentsDAO.create(student);
 		System.out.println("The student has been successfully added.");
 	}
 
-	private void deleteStudent() {
+	public void deleteStudent() {		
+		int studentId = -1;
+		while (studentId == -1) {
 		System.out.println("Enter the student ID for deletion:");
-		int studentId;
 		try {
 			studentId = scanner.nextInt();
+			scanner.nextLine();
 		} catch (InputMismatchException e) {
 			System.err.println("Invalid input. Please enter a valid integer ID.");
-			scanner.next();
-			deleteStudent();
-			return;
-		}
+			scanner.nextLine(); 
+		}}
 
 		try {
 			Optional<Student> studentOpt = studentsDAO.read(studentId);
@@ -281,4 +288,6 @@ public class MainApp implements CommandLineRunner {
 		studentsDAO.removeStudentFromCourse(studentId, courseId);
 	}
 
+	
+	
 }
