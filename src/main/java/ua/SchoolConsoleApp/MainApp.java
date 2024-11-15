@@ -1,6 +1,6 @@
 package ua.SchoolConsoleApp;
 
-import java.sql.SQLException;
+
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
@@ -200,7 +200,9 @@ public class MainApp implements CommandLineRunner {
 
 		try {
 			Optional<Student> studentOpt = studentsDAO.read(studentId);
-			studentOpt.isPresent();
+			if (!studentOpt.isPresent()) {			    
+			    return;
+			}
 			studentsDAO.delete(studentId);
 			Student student = studentOpt.get();
 			System.out.println("The student " + student.getFirstName() + " " + student.getLastName()
