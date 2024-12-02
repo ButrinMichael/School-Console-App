@@ -1,94 +1,73 @@
 package ua.SchoolConsoleApp.DAO;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import ua.SchoolConsoleApp.Group;
 
+@Repository
 public class GroupDAO implements Dao<Group> {
-	private final Connection connection;
 
-	public GroupDAO(Connection connection) {
-		this.connection = connection;
+	private final JdbcTemplate jdbcTemplate;
+
+	private static final String INSERT_GROUP_SQL = "INSERT INTO school.GROUPS (group_name) VALUES (?)";
+	private static final String SELECT_GROUP_BY_ID_SQL = "SELECT * FROM school.groups WHERE group_id = ?";
+	private static final String UPDATE_GROUPS_SQL = "UPDATE school.groups SET group_name = ? WHERE group_id = ?";
+	private static final String UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL = "UPDATE school.students SET group_id = NULL WHERE group_id = ?";
+	private static final String DELETE_GROUP_BY_ID_SQL = "DELETE FROM school.groups WHERE group_id = ?";
+	private static final String GET_ALL_GROUP_SQL = "SELECT * FROM school.GROUPS";
+
+	@Autowired
+	public GroupDAO(JdbcTemplate jdbcTemplate) {
+		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	@Override
-	public void create(Group group) throws SQLException {
-		String sql = "INSERT INTO school.GROUPS (group_name) VALUES (?)";
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setString(1, group.getName());
-			statement.executeUpdate();
+	private final RowMapper<Group> groupRowMapper = new RowMapper<Group>() {
+		@Override
+		public Group mapRow(ResultSet rs, int rowNum) throws SQLException {
+			int id = rs.getInt("group_id");
+			String name = rs.getString("group_name");
+			return new Group(id, name);
 		}
+	};
+
+	@Override
+	public void create(Group group) {
+		jdbcTemplate.update(INSERT_GROUP_SQL, group.getName());
+	}
+
+	public Optional<Group> read(int id) {
+		return jdbcTemplate.query(SELECT_GROUP_BY_ID_SQL, groupRowMapper, id).stream().findFirst();
 	}
 
 	@Override
-	public Group read(int id) throws SQLException {
-		Group group = null;
-		try {
-			PreparedStatement statement = connection
-					.prepareStatement("SELECT group_name FROM school.groups WHERE group_id = ?");
-			statement.setInt(1, id);
-			ResultSet resultSet = statement.executeQuery();
-			if (resultSet.next()) {
-				String groupName = resultSet.getString("group_name");
-				group = new Group(id, groupName);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return group;
+	public void update(Group group) {
+		jdbcTemplate.update(UPDATE_GROUPS_SQL, group.getName(), group.getId());
 	}
 
 	@Override
-	public void update(Group entity) {
-		try {
-			PreparedStatement statement = connection
-					.prepareStatement("UPDATE school.groups SET group_name = ? WHERE group_id = ?");
-			statement.setString(1, entity.getName());
-			statement.setInt(2, entity.getId());
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+	@Transactional
+	public void delete(int id) {
+		jdbcTemplate.update(UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL, id);
+		jdbcTemplate.update(DELETE_GROUP_BY_ID_SQL, id);
 	}
 
-	@Override
-	public void delete(int id) throws SQLException {
-		try {
-			PreparedStatement updateStatement = connection
-					.prepareStatement("UPDATE school.students SET group_id = NULL WHERE group_id = ?");
-			updateStatement.setInt(1, id);
-			updateStatement.executeUpdate();
-
-			PreparedStatement deleteStatement = connection
-					.prepareStatement("DELETE FROM school.groups WHERE group_id = ?");
-			deleteStatement.setInt(1, id);
-			deleteStatement.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	@Override
 	public List<Group> getAll() {
-		List<Group> groups = new ArrayList<>();
-		String sql = "SELECT * FROM school.GROUPS";
-		try (PreparedStatement statement = connection.prepareStatement(sql);
-				ResultSet resultSet = statement.executeQuery()) {
-			while (resultSet.next()) {
-				int id = resultSet.getInt("group_id");
-				String name = resultSet.getString("group_name");
-				groups.add(new Group(id, name));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
+		try {
+			return jdbcTemplate.query(GET_ALL_GROUP_SQL, groupRowMapper);
+		} catch (DataAccessException e) {
+			System.err.println("Error fetching all groups: " + e.getMessage());
+			throw new RuntimeException("Failed to fetch groups", e);
 		}
-		return groups;
 	}
 
 }
