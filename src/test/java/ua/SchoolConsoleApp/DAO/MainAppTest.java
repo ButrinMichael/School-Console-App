@@ -20,13 +20,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
-
 import ua.SchoolConsoleApp.Course;
 import ua.SchoolConsoleApp.Group;
 import ua.SchoolConsoleApp.MainApp;
 import ua.SchoolConsoleApp.Student;
+import ua.SchoolConsoleApp.Services.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MainAppTest {
@@ -42,85 +43,61 @@ public class MainAppTest {
 
 	@Mock
 	private CourseDAO courseDAO;
-	
-	
+	@Mock
+	private StudentService studentService;
+	@Mock
+	private GroupService groupService;
+
 	@InjectMocks
 	private MainApp mainApp;
-	
+
 	private Scanner originalScanner;
-	
 
 	private void setMockScanner(String input) throws Exception {
-	    Field scannerField = MainApp.class.getDeclaredField("scanner");
-	    scannerField.setAccessible(true);
-	    Scanner mockScanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
-	    scannerField.set(mainApp, mockScanner);
+		Field scannerField = MainApp.class.getDeclaredField("scanner");
+		scannerField.setAccessible(true);
+		Scanner mockScanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
+		scannerField.set(mainApp, mockScanner);
 	}
 
 	@BeforeEach
 	void setUp() throws Exception {
-	    Field scannerField = MainApp.class.getDeclaredField("scanner");
-	    scannerField.setAccessible(true);
-	    originalScanner = (Scanner) scannerField.get(mainApp);
-	}
-	
-	@AfterEach
-	void tearDown() throws Exception {
-	    Field scannerField = MainApp.class.getDeclaredField("scanner");
-	    scannerField.setAccessible(true);
-	    scannerField.set(mainApp, originalScanner);
-	}
-
-	@Test
-	public void findGroupsWithLessOrEqualStudents_shouldReturnGroups_WithValideInput()	throws Exception {
-		int TestInput = 3;
-		Group group1 = new Group(1, "Group A");
-		Group group2 = new Group(2, "Group B");
-
-		List<Group> allGroups = Arrays.asList(group1, group2);
-		when(groupDAO.getAll()).thenReturn(allGroups);
-		when(studentsDAO.getNumStudentsInGroup(1)).thenReturn(2);
-		when(studentsDAO.getNumStudentsInGroup(2)).thenReturn(3);
-
-		Scanner mockScanner = mock(Scanner.class);
-		when(mockScanner.nextInt()).thenReturn(TestInput);
-
 		Field scannerField = MainApp.class.getDeclaredField("scanner");
 		scannerField.setAccessible(true);
-		scannerField.set(mainApp, mockScanner);
+		MockitoAnnotations.openMocks(this);
+		originalScanner = (Scanner) scannerField.get(mainApp);
+	}
 
-			List<Group> result = mainApp.findGroupsWithLessOrEqualStudents();
-
-			assertEquals(2, result.size());
-			assertEquals(group1, result.get(0));
-			assertEquals(group2, result.get(1));
-
-			verify(groupDAO, times(1)).getAll();
-			verify(studentsDAO, times(1)).getNumStudentsInGroup(1);
-			verify(studentsDAO, times(1)).getNumStudentsInGroup(2);
-
+	@AfterEach
+	void tearDown() throws Exception {
+		Field scannerField = MainApp.class.getDeclaredField("scanner");
+		scannerField.setAccessible(true);
+		scannerField.set(mainApp, originalScanner);
 	}
 
 	@Test
-	public void findGroupsWithLessOrEqualStudents_shouldReturnGroups_WithFirstInvalidInputAndSecondValide()	throws Exception {
-		String input = "invalid\n3\n";
-		Group group1 = new Group(1, "Group A");
-		Group group2 = new Group(2, "Group B");
+	public void findGroupsWithLessOrEqualStudents_shouldCallGroupService() throws Exception {
+		String input = "3\n";
+		setMockScanner(input);
 
-		List<Group> allGroups = Arrays.asList(group1, group2);
-		when(groupDAO.getAll()).thenReturn(allGroups);
-		when(studentsDAO.getNumStudentsInGroup(1)).thenReturn(2);
-		when(studentsDAO.getNumStudentsInGroup(2)).thenReturn(3);
-		setMockScanner(input);	
-		PrintStream originalErr = System.err;
+		List<Group> mockGroups = List.of(new Group(1, "Group A"), new Group(2, "Group B"));
+		when(groupService.findGroupsWithLessOrEqualStudents(3)).thenReturn(mockGroups);
+
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		PrintStream originalOut = System.out;
+		System.setOut(new PrintStream(outputStream));
+
 		try {
-			List<Group> result = mainApp.findGroupsWithLessOrEqualStudents();
+			mainApp.findGroupsWithLessOrEqualStudents();
 
-			assertEquals(2, result.size());
-			assertEquals(group1, result.get(0));
-			assertEquals(group2, result.get(1));
+			verify(groupService, times(1)).findGroupsWithLessOrEqualStudents(3);
+
+			String output = outputStream.toString().trim();
+			assertTrue(output.contains("Groups with number of students less than or equal to 3:"));
+			assertTrue(output.contains("Group A"));
+			assertTrue(output.contains("Group B"));
 		} finally {
-			System.setErr(originalErr);
+			System.setOut(originalOut);
 		}
 	}
 
@@ -128,7 +105,7 @@ public class MainAppTest {
 	public void findGroupsWithLessOrEqualStudents_shouldReturnInvalidInputMessage_WhennInvalidInput() throws Exception {
 		String errorMesage = "Invalid input. Please enter a valid integer.";
 		String input = "invalid\n3\n";
-		setMockScanner(input);			
+		setMockScanner(input);
 		ByteArrayOutputStream errorStreamCaptor = new ByteArrayOutputStream();
 		PrintStream originalErr = System.err;
 		System.setErr(new PrintStream(errorStreamCaptor));
@@ -145,7 +122,7 @@ public class MainAppTest {
 	@Test
 	public void findGroupsWithLessOrEqualStudents_shouldReturnInvalidInputMessage_WhennNoGruppFind() throws Exception {
 		String testInput = "2";
-		setMockScanner(testInput);		
+		setMockScanner(testInput);
 		ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
 		PrintStream originalOut = System.out;
 		System.setOut(new PrintStream(outputStreamCaptor));
@@ -160,54 +137,29 @@ public class MainAppTest {
 	}
 
 	@Test
-	public void findStudentsByCourseName_shouldReturnStudents_WithValideInput()throws Exception {
-		String TestGroupName = "Quadrober";
-		int TestGroupId = 2;
-		Student student1 = new Student(1, 2, "Gary", "Potter");
-		Student student2 = new Student(2, 2, "Germiona", "Granger");
-		Student student3 = new Student(3, 2, "Ron", "Weasley");
-		List<Student> allStudents = Arrays.asList(student1, student2, student3);
-		when(courseDAO.getCourseIdByName(TestGroupName)).thenReturn(TestGroupId);
-		when(studentsDAO.getStudentsByCourseName(TestGroupName)).thenReturn(allStudents);
+	public void findStudentsByCourseName_shouldCallStudentService() throws Exception {
+		String input = "Math\n";
+		setMockScanner(input);
 
-		setMockScanner(TestGroupName);
-		
-			List<Student> result = mainApp.findStudentsByCourseName();
+		List<Student> mockStudents = List.of(new Student(1, 1, "Alice", "Smith"), new Student(2, 1, "Bob", "Johnson"));
 
-			assertEquals(3, result.size());
-			assertEquals(student1, result.get(0));
-			assertEquals(student2, result.get(1));
-			assertEquals(student3, result.get(2));
+		when(studentService.findStudentsByCourseName("Math")).thenReturn(mockStudents);
 
-			verify(courseDAO, times(1)).getCourseIdByName(TestGroupName);
-			verify(studentsDAO, times(1)).getStudentsByCourseName(TestGroupName);		
+		mainApp.findStudentsByCourseName();
+
+		verify(studentService, times(1)).findStudentsByCourseName("Math");
 	}
 
-	@Test
-	public void findStudentsByCourseName_shouldReturnEmptyList_WithValideInput() throws Exception {
-		String TestCourseName = "Quadrober";
-		int TestGroupId = 2;
-
-		when(courseDAO.getCourseIdByName(TestCourseName)).thenReturn(TestGroupId);
-		when(studentsDAO.getStudentsByCourseName(TestCourseName)).thenReturn(Collections.emptyList());
-		setMockScanner(TestCourseName);	
-		
-			List<Student> result = mainApp.findStudentsByCourseName();
-
-			assertTrue(result.isEmpty());
-
-			verify(courseDAO, times(1)).getCourseIdByName(TestCourseName);
-			verify(studentsDAO, times(1)).getStudentsByCourseName(TestCourseName);		
-	}
 	@Test
 	public void addNewStudent_shouldAddStudent_WhenValidInput() throws Exception {
 		String input = "John\nDoe\n";
-		setMockScanner(input);	
+		setMockScanner(input);
 		ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
 		PrintStream originalOut = System.out;
 		System.setOut(new PrintStream(outputStreamCaptor));
+
 		try {
-			doNothing().when(studentsDAO).create(any(Student.class));
+			doNothing().when(studentService).addNewStudent(any(Student.class));
 
 			mainApp.addNewStudent();
 
@@ -216,7 +168,7 @@ public class MainAppTest {
 			assertTrue(output.contains("Enter the student's surname:"));
 			assertTrue(output.contains("The student has been successfully added."));
 
-			verify(studentsDAO, times(1)).create(new Student("John", "Doe"));
+			verify(studentService, times(1)).addNewStudent(new Student("John", "Doe"));
 		} finally {
 			System.setOut(originalOut);
 		}
@@ -225,7 +177,7 @@ public class MainAppTest {
 	@Test
 	public void addNewStudent_shouldntAddStudents_withEmptyName() throws Exception {
 		String input = "\n\n";
-		setMockScanner(input);			
+		setMockScanner(input);
 		ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
 		PrintStream originalOut = System.out;
 		System.setOut(new PrintStream(outputStreamCaptor));
@@ -238,13 +190,13 @@ public class MainAppTest {
 
 			verify(studentsDAO, never()).create(any(Student.class));
 		} finally {
-			System.setOut(originalOut);			
+			System.setOut(originalOut);
 		}
 	}
 
 	@Test
 	public void addNewStudent_shouldntAddStudents_withEmptySurName() throws Exception {
-		String input = "Garry\n\n";		
+		String input = "Garry\n\n";
 		setMockScanner(input);
 		ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
 		PrintStream originalOut = System.out;
@@ -259,136 +211,185 @@ public class MainAppTest {
 			assertTrue(output.contains("Surname cannot be empty."));
 			verify(studentsDAO, never()).create(any(Student.class));
 		} finally {
-			System.setOut(originalOut);			
+			System.setOut(originalOut);
 		}
 	}
 
 	@Test
-	public void deleteStudent_shouldPrintErrorMessage_WhenInputIsInvalid() throws Exception {
-		String input = "invalid\n1\n";
-		setMockScanner(input);						
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		PrintStream originalErr = System.err;
-		System.setErr(new PrintStream(outputStream));
-	    try {	        
-	        mainApp.deleteStudent();
+	public void deleteStudent_shouldCallStudentService_WhenValidIdIsProvided() throws Exception {
+		int validId = 1;
+		String input = validId + "\n";
+		setMockScanner(input);
 
-	        String output = outputStream.toString().trim();
-	        assertTrue(output.contains("Invalid input. Please enter a valid integer ID."));
-	    } finally {
-	    	System.setErr(originalErr);
-	    }
-		
+		doNothing().when(studentService).deleteStudentById(validId);
+
+		mainApp.deleteStudent();
+
+		verify(studentService, times(1)).deleteStudentById(validId);
 	}
 
 	@Test
-	public void deleteStudent_shouldDeleteStudent_WhenValidIdIsProvided() throws Exception {
-		int validId = 1;
-		Student student = new Student("John", "Doe");
-		when(studentsDAO.read(validId)).thenReturn(Optional.of(student));
-		String input = validId + "\n";
+	public void deleteStudent_shouldNotCallStudentService_WhenInputIsInvalid() throws Exception {
+		String input = "invalid\n1\n";
 		setMockScanner(input);
+
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		PrintStream originalErr = System.err;
+		System.setErr(new PrintStream(outputStream));
+
+		try {
+			mainApp.deleteStudent();
+			String output = outputStream.toString().trim();
+			assertTrue(output.contains("Invalid input. Please enter a valid integer ID."));
+		} finally {
+			System.setErr(originalErr);
+		}
+
+		verify(studentService, never()).deleteStudentById(anyInt());
+	}
+
+	@Test
+	public void addStudentToCourse_shouldNotCallService_WhenStudentNotFound() throws Exception {
+	
+		when(courseDAO.getAll()).thenReturn(List.of(new Course(1, "Math")));
+		doThrow(new RuntimeException("Student not found: John Doe"))
+        .when(studentService).addStudentToCourse("John", "Doe", "Math");
+		String input = "John\nDoe\nMath\n";
+	    setMockScanner(input);
+
+		ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+		System.setOut(new PrintStream(outputStreamCaptor));
+	    try {
+	        mainApp.addStudentToCourse();
+
+	        String output = outputStreamCaptor.toString().trim();
+	        System.out.println("xcdsaf" + output);
+	        assertTrue(output.contains("Error: Student not found: John Doe"));
+
+	        
+	       verify(studentService, times(1)).addStudentToCourse("John", "Doe", "Math");
+	    } finally {
+	        System.setOut(System.out); 
+	    }
+	}
+
+	@Test
+	public void addStudentToCourse_shouldNotCallService_WhenCourseNotFound() throws Exception {
+		String input = "John\nDoe\nArt\n";
+		setMockScanner(input);
+
+		List<Course> courses = List.of(new Course(1, "Math"));
+		when(courseDAO.getAll()).thenReturn(courses);
+
+		doThrow(new RuntimeException("Course not found: Art")).when(studentService).addStudentToCourse("John", "Doe",
+				"Art");
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(outputStream));
 
-			mainApp.deleteStudent();
-			
-			verify(studentsDAO, times(1)).delete(validId);
+		try {
+			mainApp.addStudentToCourse();
+
 			String output = outputStream.toString().trim();
-			assertTrue(output.contains("The student John Doe has been successfully deleted."));
-		
+			assertTrue(output.contains("Error: Course not found: Art"));
+
+			verify(studentService, times(1)).addStudentToCourse("John", "Doe", "Art");
+		} finally {
+			System.setOut(System.out);
+		}
 	}
 
 	@Test
-	public void deleteStudent_shouldNotInvokeDelete_WhenStudentNotFound() throws Exception {
-	    int nonExistentId = 99;
-	    when(studentsDAO.read(nonExistentId)).thenReturn(Optional.empty());
-	    String input = nonExistentId + "\n";
-	    setMockScanner(input);
+	public void addStudentToCourse_shouldCallService_WhenInputIsValid() throws Exception {
+		String input = "John\nDoe\nMath\n";
+		setMockScanner(input);
 
-	        mainApp.deleteStudent();
-	        
-	        verify(studentsDAO, never()).delete(nonExistentId);
+		List<Course> courses = List.of(new Course(1, "Math"));
+		when(courseDAO.getAll()).thenReturn(courses);
+		doNothing().when(studentService).addStudentToCourse("John", "Doe", "Math");
+
+		ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+		System.setOut(new PrintStream(outputStreamCaptor));
+
+		try {
+			mainApp.addStudentToCourse();
+
+			verify(studentService).addStudentToCourse("John", "Doe", "Math");
+
+			String output = outputStreamCaptor.toString().trim();
+			assertTrue(output.contains("The student has been successfully added to the course!"));
+		} finally {
+			System.setOut(System.out);
+		}
 	}
+
+	@Test
+	public void removeStudentFromCourse_shouldCallService_WhenValidInput() throws Exception {
+		String input = "Alice\nJohnson\nMath\n";
+		setMockScanner(input);
+
+		when(studentsDAO.getStudentIdByName("Alice", "Johnson")).thenReturn(1);
+		when(courseDAO.getCoursesByStudentId(1)).thenReturn(List.of(new Course(101, "Math")));
+		doNothing().when(studentService).removeStudentFromCourse("Alice", "Johnson", "Math");
+
+		ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+		System.setOut(new PrintStream(outputStreamCaptor));
+
+		try {
+			mainApp.removeStudentFromCourse();
+
+			verify(studentService, times(1)).removeStudentFromCourse("Alice", "Johnson", "Math");
+
+			String output = outputStreamCaptor.toString().trim();
+			assertTrue(output.contains("The student has been successfully removed from the course!"));
+		} finally {
+			System.setOut(System.out);
+		}
+	}
+
+	@Test
+	public void removeStudentFromCourse_shouldNotCallService_WhenStudentNotFound() throws Exception {
+		String input = "Jane\nDoe\nMath\n";
+		setMockScanner(input);
+
+		when(studentsDAO.getStudentIdByName("Jane", "Doe")).thenReturn(-1);
+
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		System.setOut(new PrintStream(outputStream));
+
+		try {
+			mainApp.removeStudentFromCourse();
+	        String output = outputStream.toString().trim();
+	        System.out.println("Console Output: " + output);	        
+			verify(studentService, never()).removeStudentFromCourse(anyString(), anyString(), anyString());
 	
-	@Test
-	public void addStudentToCourse_shouldReturn_WhenStudentNotFound() throws Exception {
-	    when(studentsDAO.getStudentIdByName("John", "Doe")).thenReturn(-1);	    
-	    String input = "John\nDoe\n";
-	    setMockScanner(input);
-
-	    mainApp.addStudentToCourse();
-
-	    verify(studentsDAO, never()).addCourseToStudent(anyInt(), anyInt());
-	    verify(courseDAO, never()).getAll();
-	}
-	@Test
-	public void addStudentToCourse_shouldReturn_WhenCourseListIsEmpty() throws Exception {
-	    when(studentsDAO.getStudentIdByName("John", "Doe")).thenReturn(1);
-	    when(courseDAO.getAll()).thenReturn(Collections.emptyList());
-	    String input = "John\nDoe\n";
-	    setMockScanner(input);
-	   
-	    mainApp.addStudentToCourse();
-
-	    verify(courseDAO, never()).getCourseIdByName(anyString());
-	    verify(studentsDAO, never()).addCourseToStudent(anyInt(), anyInt());	    
-	}
-	
-	@Test
-	public void addStudentToCourse_shouldAddStudentToCourse_WhenInputIsValid() throws Exception {
-	    when(studentsDAO.getStudentIdByName("John", "Doe")).thenReturn(1);
-	    when(courseDAO.getAll()).thenReturn(List.of(new Course(1, "Math")));
-	    when(courseDAO.getCourseIdByName("Math")).thenReturn(1);
-	    when(courseDAO.isStudentEnrolled(1, 1)).thenReturn(false);
-	    String input = "John\nDoe\nMath\n";
-	    setMockScanner(input);
-	    
-	        mainApp.addStudentToCourse();
-	        
-	        verify(studentsDAO).addCourseToStudent(1, 1);
-	        verify(courseDAO).getAll();
-	}
-	
-	@Test
-	public void removeStudentFromCourse_shouldReturn_WhenStudentNotFound() throws Exception {
-	    when(studentsDAO.getStudentIdByName("John", "Doe")).thenReturn(-1);
-	    String input = "John\nDoe\n";
-	    setMockScanner(input);
-
-	        mainApp.removeStudentFromCourse();
-	        
-	        verify(studentsDAO, never()).removeStudentFromCourse(anyInt(), anyInt());
-	        verify(courseDAO, never()).getCoursesByStudentId(anyInt());	   
+			assertTrue(output.contains("Error: Student not found: Jane Doe"));
+		} finally {
+			System.setOut(System.out);
+		}
 	}
 
 	@Test
 	public void removeStudentFromCourse_shouldPrintMessage_WhenNoEnrolledCourses() throws Exception {
-	    when(studentsDAO.getStudentIdByName("Jane", "Smith")).thenReturn(1);
-	    when(courseDAO.getCoursesByStudentId(1)).thenReturn(Collections.emptyList());
-	    String input = "Jane\nSmith\n";
-	    setMockScanner(input);
+		String input = "Jane\nDoe\n";
+		setMockScanner(input);
 
-	        mainApp.removeStudentFromCourse();
-	        
-	        verify(courseDAO).getCoursesByStudentId(1);
-	        verify(studentsDAO, never()).removeStudentFromCourse(anyInt(), anyInt());
+		when(studentsDAO.getStudentIdByName("Jane", "Doe")).thenReturn(1);
+		when(courseDAO.getCoursesByStudentId(1)).thenReturn(Collections.emptyList());
 
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		System.setOut(new PrintStream(outputStream));
+
+		try {
+
+			mainApp.removeStudentFromCourse();
+
+			verify(studentService, never()).removeStudentFromCourse(anyString(), anyString(), anyString());
+			String output = outputStream.toString().trim();
+			assertTrue(output.contains("The student is not enrolled in any course."));
+		} finally {
+			System.setOut(System.out);
+		}
 	}
 
-	@Test
-	public void removeStudentFromCourse_shouldRemoveStudentFromCourse_WhenValidInput() throws Exception {
-	    when(studentsDAO.getStudentIdByName("Alice", "Johnson")).thenReturn(2);
-	    when(courseDAO.getCoursesByStudentId(2)).thenReturn(List.of(new Course(101, "Math")));
-	    when(courseDAO.getCourseIdByName("Math")).thenReturn(101);
-	    when(courseDAO.isStudentEnrolled(2, 101)).thenReturn(true);
-	    String input = "Alice\nJohnson\nMath\n";
-	    setMockScanner(input);
-
-	        mainApp.removeStudentFromCourse();
-
-	        verify(studentsDAO).removeStudentFromCourse(2, 101);
-	}
-		
 }

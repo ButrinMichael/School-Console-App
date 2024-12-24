@@ -32,16 +32,19 @@ public class MainApp implements CommandLineRunner {
 	
 	@Autowired
 	private StudentService studentService;
-
+	
 	@Autowired
+	private GroupService groupService;
+
+//	@Autowired
 //	private DBInitializer dbInitializer;
 	
-	
-	private final GroupService groupService;
-	public MainApp(GroupService groupService, Scanner scanner) {
-        this.groupService = groupService;
-        this.scanner = scanner;
-	}
+//	@Autowired
+//	private final GroupService groupService;
+//	public MainApp(GroupService groupService, Scanner scanner) {
+//        this.groupService = groupService;
+//        this.scanner = scanner;
+//	}
 	
 	
 	
@@ -183,22 +186,26 @@ public class MainApp implements CommandLineRunner {
 	    }
 	}
 
+
 	public void deleteStudent() {
 	    int studentId = -1;
 	    while (studentId == -1) {
 	        System.out.println("Enter the student ID for deletion:");
 	        try {
 	            studentId = scanner.nextInt();
-	            scanner.nextLine();
+	            scanner.nextLine(); 
 	        } catch (InputMismatchException e) {
 	            System.err.println("Invalid input. Please enter a valid integer ID.");
-	            scanner.nextLine();
+	            scanner.nextLine(); 
+	            return; 
 	        }
 	    }
+
 	    try {
 	        studentService.deleteStudentById(studentId);
+	        System.out.println("Student successfully deleted.");
 	    } catch (RuntimeException e) {
-	        System.err.println(e.getMessage());
+	        System.err.println("Failed to delete student: " + e.getMessage());
 	    }
 	}
 	
@@ -226,7 +233,7 @@ public class MainApp implements CommandLineRunner {
 
 	        System.out.println("The student has been successfully added to the course!");
 	    } catch (RuntimeException e) {
-	        System.err.println("Error: " + e.getMessage());
+	        System.out.println("Error: " + e.getMessage());
 	    }
 	}
 
@@ -237,9 +244,13 @@ public class MainApp implements CommandLineRunner {
 	        System.out.println("Enter the student's surname:");
 	        String studentLastName = scanner.nextLine().trim();
 
-	        List<Course> enrolledCourses = courseDAO.getCoursesByStudentId(
-	            studentsDAO.getStudentIdByName(studentName, studentLastName)
-	        );
+	        int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
+	        if (studentId == -1) {
+	            System.out.println("Error: Student not found: " + studentName + " " + studentLastName);
+	            return;
+	        }
+
+	        List<Course> enrolledCourses = courseDAO.getCoursesByStudentId(studentId);
 	        if (enrolledCourses.isEmpty()) {
 	            System.out.println("The student is not enrolled in any course.");
 	            return;
@@ -257,9 +268,8 @@ public class MainApp implements CommandLineRunner {
 
 	        System.out.println("The student has been successfully removed from the course!");
 	    } catch (RuntimeException e) {
-	        System.err.println("Error: " + e.getMessage());
+	        System.out.println("Error: " + e.getMessage());
 	    }
+	}
 	
-	
-}
 }

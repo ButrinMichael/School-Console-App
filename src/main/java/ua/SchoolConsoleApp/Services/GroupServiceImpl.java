@@ -31,7 +31,7 @@ public class GroupServiceImpl implements GroupService{
                 }
             }
         } catch (RuntimeException e) {
- //           throw new ServiceException("Failed to find groups with less or equal students", e);
+            throw new RuntimeException("Failed to find groups with less or equal students", e);
         }
         return result;
     }
