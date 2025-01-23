@@ -38,6 +38,7 @@ public class MainApp implements CommandLineRunner {
 
 //	@Autowired
 	
+	
 //	private DBInitializer dbInitializer;
 	
 	
