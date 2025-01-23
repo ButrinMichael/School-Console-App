@@ -39,14 +39,6 @@ public class MainApp implements CommandLineRunner {
 //	@Autowired
 //	private DBInitializer dbInitializer;
 	
-//	@Autowired
-//	private final GroupService groupService;
-//	public MainApp(GroupService groupService, Scanner scanner) {
-//        this.groupService = groupService;
-//        this.scanner = scanner;
-//	}
-	
-	
 	
 	private static Scanner scanner = new Scanner(System.in);
 
