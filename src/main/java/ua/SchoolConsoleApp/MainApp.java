@@ -37,6 +37,7 @@ public class MainApp implements CommandLineRunner {
 	private GroupService groupService;
 
 //	@Autowired
+	
 //	private DBInitializer dbInitializer;
 	
 	
