@@ -29,9 +29,9 @@ import ua.schoolconsoleapp.MainApp;
 import ua.schoolconsoleapp.dao.CourseDAO;
 import ua.schoolconsoleapp.dao.GroupDAO;
 import ua.schoolconsoleapp.dao.StudentsDAO;
-import ua.schoolconsoleapp.entity.Course;
-import ua.schoolconsoleapp.entity.Group;
-import ua.schoolconsoleapp.entity.Student;
+import ua.schoolconsoleapp.models.Course;
+import ua.schoolconsoleapp.models.Group;
+import ua.schoolconsoleapp.models.Student;
 import ua.schoolconsoleapp.services.GroupService;
 import ua.schoolconsoleapp.services.StudentService;
 

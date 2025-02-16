@@ -2,7 +2,7 @@ package ua.schoolconsoleapp.services;
 
 import java.util.List;
 
-import ua.schoolconsoleapp.entity.Group;
+import ua.schoolconsoleapp.models.Group;
 
 
 public interface GroupService {

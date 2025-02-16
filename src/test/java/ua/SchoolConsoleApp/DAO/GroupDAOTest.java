@@ -18,7 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import ua.schoolconsoleapp.dao.GroupDAO;
-import ua.schoolconsoleapp.entity.Group;
+import ua.schoolconsoleapp.models.Group;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupDAOTest {

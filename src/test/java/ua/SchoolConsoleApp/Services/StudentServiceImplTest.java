@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import ua.schoolconsoleapp.dao.CourseDAO;
 import ua.schoolconsoleapp.dao.StudentsDAO;
-import ua.schoolconsoleapp.entity.Student;
+import ua.schoolconsoleapp.models.Student;
 import ua.schoolconsoleapp.services.StudentServiceImpl;
 
 @ExtendWith(MockitoExtension.class)

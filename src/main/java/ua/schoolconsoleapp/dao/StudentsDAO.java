@@ -8,8 +8,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import ua.schoolconsoleapp.entity.Course;
-import ua.schoolconsoleapp.entity.Student;
+import ua.schoolconsoleapp.models.Course;
+import ua.schoolconsoleapp.models.Student;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

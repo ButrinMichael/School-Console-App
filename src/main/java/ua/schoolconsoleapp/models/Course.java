@@ -1,4 +1,4 @@
-package ua.schoolconsoleapp.entity;
+package ua.schoolconsoleapp.models;
 
 import java.util.Objects;
 

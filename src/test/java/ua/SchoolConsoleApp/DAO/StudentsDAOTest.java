@@ -30,8 +30,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import ua.schoolconsoleapp.dao.StudentsDAO;
-import ua.schoolconsoleapp.entity.Course;
-import ua.schoolconsoleapp.entity.Student;
+import ua.schoolconsoleapp.models.Course;
+import ua.schoolconsoleapp.models.Student;
 
 @ExtendWith(MockitoExtension.class)
 public class StudentsDAOTest {

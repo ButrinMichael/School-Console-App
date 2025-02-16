@@ -29,7 +29,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import ua.schoolconsoleapp.dao.CourseDAO;
-import ua.schoolconsoleapp.entity.Course;
+import ua.schoolconsoleapp.models.Course;
 
 @ExtendWith(MockitoExtension.class)
 public class CourseDAOTest {

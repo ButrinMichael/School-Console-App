@@ -1,4 +1,4 @@
-package ua.schoolconsoleapp.config;
+package ua.schoolconsoleapp.services;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -12,9 +12,9 @@ import ua.schoolconsoleapp.dao.CourseDAO;
 import ua.schoolconsoleapp.dao.GroupDAO;
 import ua.schoolconsoleapp.dao.StudentsDAO;
 import ua.schoolconsoleapp.db.DBFileReader;
-import ua.schoolconsoleapp.entity.Course;
-import ua.schoolconsoleapp.entity.Group;
-import ua.schoolconsoleapp.entity.Student;
+import ua.schoolconsoleapp.models.Course;
+import ua.schoolconsoleapp.models.Group;
+import ua.schoolconsoleapp.models.Student;
 import ua.schoolconsoleapp.utils.CourseList;
 import ua.schoolconsoleapp.utils.GroupIdGenerator;
 import ua.schoolconsoleapp.utils.GroupNameGenerator;
