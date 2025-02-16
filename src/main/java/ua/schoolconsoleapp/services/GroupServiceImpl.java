@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import ua.schoolconsoleapp.dao.GroupDAO;
 import ua.schoolconsoleapp.dao.StudentsDAO;
-import ua.schoolconsoleapp.Group;
+import ua.schoolconsoleapp.entity.Group;
 
 @Service
 public class GroupServiceImpl implements GroupService{

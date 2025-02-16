@@ -1,4 +1,4 @@
-package ua.schoolconsoleapp;
+package ua.schoolconsoleapp.utils;
 
 import java.util.Random;
 

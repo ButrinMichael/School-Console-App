@@ -28,8 +28,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
-import ua.schoolconsoleapp.Course;
 import ua.schoolconsoleapp.dao.CourseDAO;
+import ua.schoolconsoleapp.entity.Course;
 
 @ExtendWith(MockitoExtension.class)
 public class CourseDAOTest {

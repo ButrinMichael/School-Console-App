@@ -2,7 +2,7 @@ package ua.schoolconsoleapp.services;
 
 import java.util.List;
 
-import ua.schoolconsoleapp.Student;
+import ua.schoolconsoleapp.entity.Student;
 
 public interface StudentService {
     List<Student> findStudentsByCourseName(String courseName);

@@ -25,13 +25,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import ua.SchoolConsoleApp.Services.*;
-import ua.schoolconsoleapp.Course;
-import ua.schoolconsoleapp.Group;
 import ua.schoolconsoleapp.MainApp;
-import ua.schoolconsoleapp.Student;
 import ua.schoolconsoleapp.dao.CourseDAO;
 import ua.schoolconsoleapp.dao.GroupDAO;
 import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.entity.Course;
+import ua.schoolconsoleapp.entity.Group;
+import ua.schoolconsoleapp.entity.Student;
 import ua.schoolconsoleapp.services.GroupService;
 import ua.schoolconsoleapp.services.StudentService;
 

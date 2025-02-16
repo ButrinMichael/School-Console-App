@@ -11,12 +11,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Component
-public class DB_file_reader {
+public class DBFileReader {
 
 	private final JdbcTemplate jdbcTemplate;
 
 	@Autowired
-	public DB_file_reader(JdbcTemplate jdbcTemplate) {
+	public DBFileReader(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 

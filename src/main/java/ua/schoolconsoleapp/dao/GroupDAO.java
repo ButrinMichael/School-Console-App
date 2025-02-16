@@ -12,7 +12,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import ua.schoolconsoleapp.Group;
+import ua.schoolconsoleapp.entity.Group;
 
 @Repository
 public class GroupDAO implements Dao<Group> {

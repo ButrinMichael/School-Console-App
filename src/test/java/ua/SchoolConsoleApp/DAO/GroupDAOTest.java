@@ -17,8 +17,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
-import ua.schoolconsoleapp.Group;
 import ua.schoolconsoleapp.dao.GroupDAO;
+import ua.schoolconsoleapp.entity.Group;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupDAOTest {
