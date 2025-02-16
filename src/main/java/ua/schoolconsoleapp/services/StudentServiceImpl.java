@@ -1,10 +1,11 @@
-package ua.SchoolConsoleApp.Services;
+package ua.schoolconsoleapp.services;
 
 
 import org.springframework.stereotype.Service;
-import ua.SchoolConsoleApp.DAO.CourseDAO;
-import ua.SchoolConsoleApp.DAO.StudentsDAO;
-import ua.SchoolConsoleApp.Student;
+import ua.schoolconsoleapp.dao.CourseDAO;
+import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.Student;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;

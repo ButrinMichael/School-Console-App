@@ -1,4 +1,4 @@
-package ua.SchoolConsoleApp;
+package ua.schoolconsoleapp;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -8,10 +8,10 @@ import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ua.SchoolConsoleApp.DAO.CourseDAO;
-import ua.SchoolConsoleApp.DAO.GroupDAO;
-import ua.SchoolConsoleApp.DAO.StudentsDAO;
-import ua.SchoolConsoleApp.DB.DB_file_reader;
+import ua.schoolconsoleapp.dao.CourseDAO;
+import ua.schoolconsoleapp.dao.GroupDAO;
+import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.db.DB_file_reader;
 
 @Component
 public class DBInitializer {

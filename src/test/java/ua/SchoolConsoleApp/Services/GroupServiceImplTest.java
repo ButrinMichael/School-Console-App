@@ -13,9 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import ua.SchoolConsoleApp.DAO.GroupDAO;
-import ua.SchoolConsoleApp.DAO.StudentsDAO;
-import ua.SchoolConsoleApp.Group;
+import ua.schoolconsoleapp.dao.GroupDAO;
+import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.services.GroupServiceImpl;
+import ua.schoolconsoleapp.Group;
 
 public class GroupServiceImplTest {
 

@@ -1,4 +1,4 @@
-package ua.SchoolConsoleApp;
+package ua.schoolconsoleapp;
 
 
 import java.util.InputMismatchException;
@@ -9,10 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import ua.SchoolConsoleApp.DAO.CourseDAO;
-import ua.SchoolConsoleApp.DAO.StudentsDAO;
-import ua.SchoolConsoleApp.Services.GroupService;
-import ua.SchoolConsoleApp.Services.StudentService;
+import ua.schoolconsoleapp.dao.CourseDAO;
+import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.services.GroupService;
+import ua.schoolconsoleapp.services.StudentService;
 
 
 
@@ -39,12 +39,7 @@ public class MainApp implements CommandLineRunner {
 //	@Autowired
 //	private DBInitializer dbInitializer;
 	
-//	@Autowired
-//	private final GroupService groupService;
-//	public MainApp(GroupService groupService, Scanner scanner) {
-//        this.groupService = groupService;
-//        this.scanner = scanner;
-//	}
+
 	
 	
 	

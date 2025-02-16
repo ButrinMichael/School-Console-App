@@ -29,8 +29,9 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
-import ua.SchoolConsoleApp.Course;
-import ua.SchoolConsoleApp.Student;
+import ua.schoolconsoleapp.Course;
+import ua.schoolconsoleapp.Student;
+import ua.schoolconsoleapp.dao.StudentsDAO;
 
 @ExtendWith(MockitoExtension.class)
 public class StudentsDaoTest {

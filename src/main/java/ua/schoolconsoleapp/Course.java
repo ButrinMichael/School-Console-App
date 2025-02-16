@@ -1,4 +1,4 @@
-package ua.SchoolConsoleApp;
+package ua.schoolconsoleapp;
 
 import java.util.Objects;
 

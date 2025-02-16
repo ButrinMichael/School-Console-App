@@ -16,7 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import ua.SchoolConsoleApp.Group;
+
+import ua.schoolconsoleapp.Group;
+import ua.schoolconsoleapp.dao.GroupDAO;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupDAOTest {

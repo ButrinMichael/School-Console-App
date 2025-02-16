@@ -1,4 +1,4 @@
-package ua.SchoolConsoleApp;
+package ua.schoolconsoleapp;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

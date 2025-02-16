@@ -1,8 +1,8 @@
-package ua.SchoolConsoleApp.Services;
-
-import ua.SchoolConsoleApp.Student;
+package ua.schoolconsoleapp.services;
 
 import java.util.List;
+
+import ua.schoolconsoleapp.Student;
 
 public interface StudentService {
     List<Student> findStudentsByCourseName(String courseName);

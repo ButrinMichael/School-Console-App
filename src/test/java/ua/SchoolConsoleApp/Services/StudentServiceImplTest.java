@@ -13,9 +13,10 @@ import org.mockito.Mock;
 
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import ua.SchoolConsoleApp.DAO.CourseDAO;
-import ua.SchoolConsoleApp.DAO.StudentsDAO;
-import ua.SchoolConsoleApp.Student;
+import ua.schoolconsoleapp.dao.CourseDAO;
+import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.services.StudentServiceImpl;
+import ua.schoolconsoleapp.Student;
 
 @ExtendWith(MockitoExtension.class)
 public class StudentServiceImplTest {

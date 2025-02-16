@@ -1,4 +1,4 @@
-package ua.SchoolConsoleApp.DB;
+package ua.schoolconsoleapp.db;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
