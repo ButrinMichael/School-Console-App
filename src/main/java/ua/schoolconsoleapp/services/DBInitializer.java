@@ -1,4 +1,4 @@
-package ua.SchoolConsoleApp;
+package ua.schoolconsoleapp.services;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -8,21 +8,28 @@ import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ua.SchoolConsoleApp.DAO.CourseDAO;
-import ua.SchoolConsoleApp.DAO.GroupDAO;
-import ua.SchoolConsoleApp.DAO.StudentsDAO;
-import ua.SchoolConsoleApp.DB.DB_file_reader;
+import ua.schoolconsoleapp.dao.CourseDAO;
+import ua.schoolconsoleapp.dao.GroupDAO;
+import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.db.DBFileReader;
+import ua.schoolconsoleapp.models.Course;
+import ua.schoolconsoleapp.models.Group;
+import ua.schoolconsoleapp.models.Student;
+import ua.schoolconsoleapp.utils.CourseList;
+import ua.schoolconsoleapp.utils.GroupIdGenerator;
+import ua.schoolconsoleapp.utils.GroupNameGenerator;
+import ua.schoolconsoleapp.utils.StudentFirstLastNameGenerator;
 
 @Component
 public class DBInitializer {
 
-	private final DB_file_reader dbFileReader;
+	private final DBFileReader dbFileReader;
 	private final GroupDAO groupDAO;
 	private final CourseDAO courseDAO;
 	private final StudentsDAO studentsDAO;
 
 	@Autowired
-	public DBInitializer(DB_file_reader dbFileReader, GroupDAO groupDAO, CourseDAO courseDAO, StudentsDAO studentsDAO) {
+	public DBInitializer(DBFileReader dbFileReader, GroupDAO groupDAO, CourseDAO courseDAO, StudentsDAO studentsDAO) {
 		this.dbFileReader = dbFileReader;
 		this.groupDAO = groupDAO;
 		this.courseDAO = courseDAO;
@@ -66,7 +73,7 @@ public class DBInitializer {
 	}
 
 	private void insertStudentInitialData() throws SQLException {
-		List<String> studentsNames = StudentFirsLastNameGenerator.generateStudents(200);
+		List<String> studentsNames = StudentFirstLastNameGenerator.generateStudents(200);
 		GroupIdGenerator groupIdGenerator = new GroupIdGenerator();
 		for (String studentName : studentsNames) {
 			Integer groupId = groupIdGenerator.generateGroupId();

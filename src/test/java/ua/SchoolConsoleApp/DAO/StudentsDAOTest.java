@@ -29,11 +29,12 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
-import ua.SchoolConsoleApp.Course;
-import ua.SchoolConsoleApp.Student;
+import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.models.Course;
+import ua.schoolconsoleapp.models.Student;
 
 @ExtendWith(MockitoExtension.class)
-public class StudentsDaoTest {
+public class StudentsDAOTest {
 	private static final String INSERT_STUDENT_SQL = "INSERT INTO school.STUDENTS (group_id, first_name, last_name) VALUES (?, ?, ?)";
 	private static final String UPDATE_STUDENT_SQL = "UPDATE school.students SET group_id = ?, first_name = ?, last_name = ? WHERE student_id = ?";
 	private static final String DELETE_STUDENT_FROM_STUDENT_COURSES_BY_ID_SQL = "DELETE FROM School.STUDENTS_COURSES WHERE student_id = ?";

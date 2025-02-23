@@ -1,4 +1,4 @@
-package ua.SchoolConsoleApp.DAO;
+package ua.schoolconsoleapp.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,7 +12,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import ua.SchoolConsoleApp.Group;
+import ua.schoolconsoleapp.models.Group;
 
 @Repository
 public class GroupDAO implements Dao<Group> {

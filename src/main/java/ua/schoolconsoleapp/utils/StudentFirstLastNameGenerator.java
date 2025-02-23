@@ -1,10 +1,10 @@
-package ua.SchoolConsoleApp;
+package ua.schoolconsoleapp.utils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class StudentFirsLastNameGenerator {
+public class StudentFirstLastNameGenerator {
 	private static final String[] firstNames = { "Max", "Paul", "Leon", "Luca", "Finn", "Liam", "Elias", "Jonas",
 			"Noah", "Felix", "Sophie", "Marie", "Emma", "Hannah", "Lena", "Mia", "Emilia", "Anna", "Laura", "Lea" };
 

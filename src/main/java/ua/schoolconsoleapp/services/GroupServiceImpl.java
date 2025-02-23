@@ -1,13 +1,13 @@
-package ua.SchoolConsoleApp.Services;
+package ua.schoolconsoleapp.services;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import ua.SchoolConsoleApp.Group;
-import ua.SchoolConsoleApp.DAO.GroupDAO;
-import ua.SchoolConsoleApp.DAO.StudentsDAO;
+import ua.schoolconsoleapp.dao.GroupDAO;
+import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.models.Group;
 
 @Service
 public class GroupServiceImpl implements GroupService{

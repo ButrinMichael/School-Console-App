@@ -1,9 +1,8 @@
-package ua.SchoolConsoleApp.Services;
+package ua.schoolconsoleapp.services;
 
 import java.util.List;
 
-
-import ua.SchoolConsoleApp.Group;
+import ua.schoolconsoleapp.models.Group;
 
 
 public interface GroupService {
