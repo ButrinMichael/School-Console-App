@@ -1,5 +1,7 @@
 package ua.schoolconsoleapp.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -17,6 +19,7 @@ import java.util.Optional;
 
 @Repository
 public class CourseDAO implements Dao<Course> {
+	private static final Logger logger = LoggerFactory.getLogger(CourseDAO.class);
 	private final JdbcTemplate jdbcTemplate;
 
 	private static final String INSERT_COURSE_SQL = "INSERT INTO school.COURSES (course_name, course_description) VALUES (?, ?)";
@@ -49,59 +52,112 @@ public class CourseDAO implements Dao<Course> {
 
 	@Override
 	public void create(Course course) {
-		jdbcTemplate.update(INSERT_COURSE_SQL, course.getName(), course.getDescription());
-	}
+        logger.info("Creating course: {}", course.getName());
+        try {
+            jdbcTemplate.update(INSERT_COURSE_SQL, course.getName(), course.getDescription());
+            logger.info("Course '{}' created successfully.", course.getName());
+        } catch (DataAccessException e) {
+            logger.error("Failed to create course '{}': {}", course.getName(), e.getMessage(), e);
+            throw new RuntimeException("Failed to create course", e);
+        }
+    }
 
-	@Override
 	public Optional<Course> read(int id) {
-		return jdbcTemplate.query(SELECT_COURS_BY_ID_SQL, courseRowMapper, id).stream().findFirst();
-	}
-
+        logger.info("Reading course with ID: {}", id);
+        try {
+            Optional<Course> course = jdbcTemplate.query(SELECT_COURS_BY_ID_SQL, courseRowMapper, id).stream().findFirst();
+            if (course.isPresent()) {
+                logger.info("Course found: {}", course.get());
+            } else {
+                logger.warn("Course with ID {} not found.", id);
+            }
+            return course;
+        } catch (DataAccessException e) {
+            logger.error("Failed to read course with ID {}: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Failed to read course", e);
+        }
+    }
 	@Override
-	public void update(Course course) {
-		jdbcTemplate.update(UPDATE_COURSE_SQL, course.getName(), course.getDescription(), course.getId());
-	}
+    public void update(Course course) {
+        logger.info("Updating course with ID: {} to new name '{}' and description '{}'",
+                course.getId(), course.getName(), course.getDescription());
+        try {
+            jdbcTemplate.update(UPDATE_COURSE_SQL, course.getName(), course.getDescription(), course.getId());
+            logger.info("Course with ID {} updated successfully.", course.getId());
+        } catch (DataAccessException e) {
+            logger.error("Failed to update course with ID {}: {}", course.getId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to update course", e);
+        }
+    }
 
 	@Override
 	@Transactional
 	public void delete(int id) {
-		jdbcTemplate.update(DELETE_STUDENT_COURSE_SQL, id);
-		jdbcTemplate.update(DELETE_COURSE_SQL, id);
-	}
+        logger.info("Deleting course with ID: {}", id);
+        try {
+            jdbcTemplate.update(DELETE_STUDENT_COURSE_SQL, id);  
+            jdbcTemplate.update(DELETE_COURSE_SQL, id);          
+            logger.info("Course with ID {} deleted successfully.", id);
+        } catch (DataAccessException e) {
+            logger.error("Failed to delete course with ID {}: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Failed to delete course", e);
+        }
+    }
 
-	@Override
 	public List<Course> getAll() {
-			return jdbcTemplate.query(SELECT_ALL_COURSES_SQL, courseRowMapper);
-			}
+        logger.info("Fetching all courses");
+        try {
+            List<Course> courses = jdbcTemplate.query(SELECT_ALL_COURSES_SQL, courseRowMapper);
+            logger.info("Fetched {} courses from database.", courses.size());
+            return courses;
+        } catch (DataAccessException e) {
+            logger.error("Failed to fetch all courses: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch courses", e);
+        }
+    }
 
+	
 	public int getCourseIdByName(String courseName) {
-		try {
-			return jdbcTemplate.queryForObject(SELECT_COURSE_ID_BY_NAME_SQL, Integer.class, courseName);
-		} catch (EmptyResultDataAccessException e) {
-			System.err.println("Course with name \"" + courseName + "\" not found.");
-			return -1;
+		 logger.info("Fetching course ID for course name: {}", courseName);
+		try {		
+			Integer courseId = jdbcTemplate.queryForObject(SELECT_COURSE_ID_BY_NAME_SQL, Integer.class, courseName);
+            if (courseId != null) {
+                logger.info("Course ID for '{}' is {}", courseName, courseId);
+                return courseId;
+            } else {
+                logger.warn("Course '{}' not found.", courseName);
+                return -1;
+            }
 		} catch (DataAccessException e) {
+			logger.error("Failed to fetch course ID for '{}': {}", courseName, e.getMessage(), e);
 			System.err.println("Failed to retrieve course ID for name \"" + courseName + "\": " + e.getMessage());
 			return -1;
 		}
 	}
 
 	public boolean isStudentEnrolled(int studentId, int courseId) {
+		logger.info("Checking if student with ID {} is enrolled in course with ID {}", studentId, courseId);
 		try {
 			int count = jdbcTemplate.queryForObject(CHECK_STUDENTENROLLMENT_SQL, Integer.class, studentId, courseId);
+			logger.debug("Student with ID {} enrollment status in course with ID {}: {}", studentId, courseId,count);
 			return count > 0;
 		} catch (EmptyResultDataAccessException e) {
 			return false;
 		} catch (DataAccessException e) {
+			logger.error("Failed to check enrollment for student with ID {} in course with ID {}: {}", studentId, courseId, e.getMessage(), e);
 			System.err.println("Error checking student enrollment: " + e.getMessage());
 			throw new RuntimeException("Failed to check student enrollment", e);
 		}
 	}
 
 	public List<Course> getCoursesByStudentId(int studentId) {
-		try {
-			return jdbcTemplate.query(SELECT_COURSE_BY_STUDENT_ID_SQL, courseRowMapper, studentId);
+		logger.info("Fetching courses for student with ID: {}", studentId);
+	    try {
+	        List<Course> courses = jdbcTemplate.query(SELECT_COURSE_BY_STUDENT_ID_SQL, courseRowMapper, studentId);
+	        logger.info("Fetched {} courses for student with ID: {}", courses.size(), studentId);
+	        return courses;
 		} catch (DataAccessException e) {
+			logger.error("Error retrieving courses for student with ID {}: {}", studentId, e.getMessage(), e);
 			System.err.println("Error retrieving courses for student with ID " + studentId + ": " + e.getMessage());
 			throw new RuntimeException("Failed to retrieve courses for the student", e);
 		}
@@ -109,7 +165,14 @@ public class CourseDAO implements Dao<Course> {
 
 	@Transactional
 	public void assignCourse(int studentId, int courseId) {
-		jdbcTemplate.update(ASSIGN_COURSE_SQL, studentId, courseId);
-	}
+        logger.info("Assigning student with ID {} to course with ID {}", studentId, courseId);
+        try {
+            jdbcTemplate.update(ASSIGN_COURSE_SQL, studentId, courseId);
+            logger.info("Student with ID {} successfully assigned to course with ID {}", studentId, courseId);
+        } catch (DataAccessException e) {
+            logger.error("Failed to assign student with ID {} to course with ID {}: {}", studentId, courseId, e.getMessage(), e);
+            throw new RuntimeException("Failed to assign student to course", e);
+        }
+    }
 
 }

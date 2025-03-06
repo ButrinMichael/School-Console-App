@@ -12,7 +12,13 @@ spring:
   sql:
     init:
       mode: always
-      logging:
+
+logging:   
   level:
     root: INFO
     ua.schoolconsoleapp: DEBUG
+  file:
+    name: logs/application.log
+
+      
+
