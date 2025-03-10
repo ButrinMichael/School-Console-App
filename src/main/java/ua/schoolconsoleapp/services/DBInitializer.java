@@ -40,7 +40,7 @@ public class DBInitializer {
 	public void initializeDatabase() {
 		logger.info("Starting database initialization...");
 		try {
-			createTables();
+//			createTables();
 			insertGroupInitialData();
 			insertCourseInitialData();
 			insertStudentInitialData();
@@ -53,12 +53,12 @@ public class DBInitializer {
 		}
 	}
 
-	private void createTables() {
-		String dbName = "DB.sql";
-		logger.info("Executing SQL file: {}", dbName);
-		dbFileReader.executeSQLFile(dbName);
-		logger.info("Tables created successfully.");
-	}
+//	private void createTables() {
+//		String dbName = "DB.sql";
+//		logger.info("Executing SQL file: {}", dbName);
+//		dbFileReader.executeSQLFile(dbName);
+//		logger.info("Tables created successfully.");
+//	}
 
 	private void insertGroupInitialData() {
 		logger.info("Starting initial group data insertion...");

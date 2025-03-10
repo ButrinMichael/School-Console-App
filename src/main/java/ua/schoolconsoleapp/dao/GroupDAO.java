@@ -23,10 +23,10 @@ public class GroupDAO implements Dao<Group> {
 	private final JdbcTemplate jdbcTemplate;
 
 	private static final String INSERT_GROUP_SQL = "INSERT INTO school.GROUPS (group_name) VALUES (?)";
-	private static final String SELECT_GROUP_BY_ID_SQL = "SELECT * FROM school.groups WHERE group_id = ?";
-	private static final String UPDATE_GROUPS_SQL = "UPDATE school.groups SET group_name = ? WHERE group_id = ?";
+	private static final String SELECT_GROUP_BY_ID_SQL = "SELECT * FROM school.GROUPS WHERE group_id = ?";
+	private static final String UPDATE_GROUPS_SQL = "UPDATE school.GROUPS SET group_name = ? WHERE group_id = ?";
 	private static final String UPDATE_STUDENTS_GROUP_BY_GROUP_ID_SQL = "UPDATE school.students SET group_id = NULL WHERE group_id = ?";
-	private static final String DELETE_GROUP_BY_ID_SQL = "DELETE FROM school.groups WHERE group_id = ?";
+	private static final String DELETE_GROUP_BY_ID_SQL = "DELETE FROM school.GROUPS WHERE group_id = ?";
 	private static final String GET_ALL_GROUP_SQL = "SELECT * FROM school.GROUPS";
 
 	@Autowired

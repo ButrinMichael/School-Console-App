@@ -29,6 +29,7 @@ public class StudentsDAO implements Dao<Student> {
 	private static final String DELETE_STUDENT_FROM_STUDENT_COURSES_BY_ID_SQL = "DELETE FROM School.STUDENTS_COURSES WHERE student_id = ?";
 	private static final String DELETE_STUDENT_BY_ID_SQL = "DELETE FROM school.students WHERE student_id = ?";
 	private static final String SELECT_STUDENT_BY_ID_SQL = "SELECT * FROM school.students WHERE student_id = ?";
+	private static final String SELECT_ALL_STUDENTS_SQL = "SELECT * FROM school.students";
 	private static final String SELECT_COUNT_STUDENTS_BY_GROUP_ID_SQL = "SELECT COUNT(*) FROM school.students WHERE group_id = ?";
 	private static final String SELECT_STUDENTS_BY_COURSE_NAME_SQL = "SELECT s.* FROM school.students s "
 			+ "JOIN school.students_courses sc ON s.student_id = sc.student_id "
@@ -129,11 +130,10 @@ public class StudentsDAO implements Dao<Student> {
 	@Override
 	public List<Student> getAll() {
 		logger.info("Fetching all students");
-		try {
-			List<Student> students = jdbcTemplate.query(SELECT_STUDENT_BY_ID_SQL, studentRowMapper);
-			logger.info("Fetched {} students.", students.size());
-			return students;
-		} catch (DataAccessException e) {
+		 try {
+		        logger.info("Fetching all students");
+		        return jdbcTemplate.query(SELECT_ALL_STUDENTS_SQL, studentRowMapper);
+		    } catch (DataAccessException e) {
 			logger.error("Failed to fetch all students: {}", e.getMessage(), e);
 			throw new RuntimeException("Failed to fetch students", e);
 		}

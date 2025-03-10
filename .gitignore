@@ -3,5 +3,6 @@
 .classpath/
 .editorconfig/
 .project/
+logs/
 
 
