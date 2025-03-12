@@ -42,10 +42,7 @@ public class MainApp implements CommandLineRunner {
 
 	@Autowired
 	private DBInitializer dbInitializer;
-	
-
-	
-	
+		
 	
 	private static Scanner scanner = new Scanner(System.in);
 
@@ -56,7 +53,7 @@ public class MainApp implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) {
-//		dbInitializer.initializeDatabase();
+		dbInitializer.initializeDatabase();
 		showMenu();
 		closeScanner();
 		System.exit(0);

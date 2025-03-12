@@ -1,3 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS school;
+
 CREATE TABLE school.GROUPS (
     group_id SERIAL PRIMARY KEY,
     group_name VARCHAR(255)
