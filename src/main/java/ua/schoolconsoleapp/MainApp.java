@@ -14,6 +14,7 @@ import ua.schoolconsoleapp.dao.StudentsDAO;
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.models.Student;
+import ua.schoolconsoleapp.services.DBInitializer;
 import ua.schoolconsoleapp.services.GroupService;
 import ua.schoolconsoleapp.services.StudentService;
 
@@ -39,12 +40,9 @@ public class MainApp implements CommandLineRunner {
 	@Autowired
 	private GroupService groupService;
 
-//	@Autowired
-//	private DBInitializer dbInitializer;
-	
-
-	
-	
+	@Autowired
+	private DBInitializer dbInitializer;
+		
 	
 	private static Scanner scanner = new Scanner(System.in);
 
@@ -55,7 +53,7 @@ public class MainApp implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) {
-		// dbInitializer.initializeDatabase();
+		dbInitializer.initializeDatabase();
 		showMenu();
 		closeScanner();
 		System.exit(0);
