@@ -1,11 +1,24 @@
 package ua.schoolconsoleapp.models;
 
 import java.util.Objects;
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "groups")
 public class Group {
-	private Integer id;
-	private String name;
+	//private Integer id;
+	//private String name;
 
+	@Id  
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  
+    private Integer id;
+	
+	 @Column(name = "group_name", nullable = false, unique = true)  
+	    private String name;
+
+		public Group() {
+		}
+	 
 	public Group(Integer id, String name) {
 		this.id = id;
 		this.name = name;

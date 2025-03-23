@@ -3,6 +3,7 @@ package ua.schoolconsoleapp;
 
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +11,12 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import ua.schoolconsoleapp.dao.CourseDAO;
+import ua.schoolconsoleapp.dao.JPAStudentDAO;
 import ua.schoolconsoleapp.dao.StudentsDAO;
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.models.Student;
-import ua.schoolconsoleapp.services.DBInitializer;
+//import ua.schoolconsoleapp.services.DBInitializer;
 import ua.schoolconsoleapp.services.GroupService;
 import ua.schoolconsoleapp.services.StudentService;
 
@@ -29,7 +31,7 @@ public class MainApp implements CommandLineRunner {
 	}
 
 	@Autowired
-	private StudentsDAO studentsDAO;
+	private JPAStudentDAO studentsDAO;
 
 	@Autowired
 	private CourseDAO courseDAO;
@@ -40,8 +42,8 @@ public class MainApp implements CommandLineRunner {
 	@Autowired
 	private GroupService groupService;
 
-	@Autowired
-	private DBInitializer dbInitializer;
+//	@Autowired
+//	private DBInitializer dbInitializer;
 		
 	
 	private static Scanner scanner = new Scanner(System.in);
@@ -53,7 +55,7 @@ public class MainApp implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) {
-		dbInitializer.initializeDatabase();
+//		dbInitializer.initializeDatabase();
 		showMenu();
 		closeScanner();
 		System.exit(0);
@@ -240,13 +242,14 @@ public class MainApp implements CommandLineRunner {
 	        System.out.println("Enter the student's surname:");
 	        String studentLastName = scanner.nextLine().trim();
 
-	        int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
-	        if (studentId == -1) {
+	        Optional<Student> studentOpt = studentsDAO.findByNameAndLastName(studentName, studentLastName);
+	        if (studentOpt.isEmpty()) {
 	            System.out.println("Error: Student not found: " + studentName + " " + studentLastName);
 	            return;
 	        }
+	        Student student = studentOpt.get(); 
 
-	        List<Course> enrolledCourses = courseDAO.getCoursesByStudentId(studentId);
+	        List<Course> enrolledCourses = courseDAO.getCoursesByStudentId(student.getId());
 	        if (enrolledCourses.isEmpty()) {
 	            System.out.println("The student is not enrolled in any course.");
 	            return;

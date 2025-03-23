@@ -1,11 +1,27 @@
 package ua.schoolconsoleapp.models;
 
 import java.util.Objects;
+import jakarta.persistence.*;
 
+@Entity  
+@Table(name = "courses")
 public class Course {
-	private int id;
-	private String name;
-	private String description;
+//	private int id;
+//	private String name;
+//	private String description;
+	
+	@Id  // Первичный ключ
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Автоинкремент
+    private int id;
+
+    @Column(name = "course_name", nullable = false, unique = true)  // Имя колонки в БД
+    private String name;
+
+    @Column(name = "course_description")  // Имя колонки в БД
+    private String description;
+
+    public Course() {}	
+	
 
 	public Course(int id, String name, String description) {
 		this.id = id;
