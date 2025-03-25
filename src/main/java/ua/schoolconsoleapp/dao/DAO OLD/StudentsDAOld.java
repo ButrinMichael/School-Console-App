@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public abstract class StudentsDAO implements Dao<Student> {
+public abstract class StudentsDAOld implements Dao<Student> {
 //	public class StudentsDAO implements Dao<Student> {
 //	private static final Logger logger = LoggerFactory.getLogger(StudentsDAO.class);
 //	private final JdbcTemplate jdbcTemplate;

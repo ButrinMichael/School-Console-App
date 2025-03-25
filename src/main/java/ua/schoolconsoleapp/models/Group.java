@@ -1,24 +1,28 @@
 package ua.schoolconsoleapp.models;
 
+import java.util.List;
 import java.util.Objects;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "groups")
+@Table(name = "groups", schema = "school")
 public class Group {
-	//private Integer id;
-	//private String name;
 
-	@Id  
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  
-    private Integer id;
-	
-	 @Column(name = "group_name", nullable = false, unique = true)  
-	    private String name;
 
-		public Group() {
-		}
-	 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "group_id")
+	private Integer id;
+
+	@Column(name = "group_name", nullable = false, unique = true)
+	private String name;
+
+	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Student> students;
+
+	public Group() {
+	}
+
 	public Group(Integer id, String name) {
 		this.id = id;
 		this.name = name;
@@ -48,6 +52,14 @@ public class Group {
 	@Override
 	public int hashCode() {
 		return Objects.hash(id, name);
+	}
+
+	public List<Student> getStudents() {
+		return students;
+	}
+
+	public void setStudents(List<Student> students) {
+		this.students = students;
 	}
 
 	@Override

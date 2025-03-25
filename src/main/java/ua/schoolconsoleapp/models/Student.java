@@ -1,29 +1,33 @@
 package ua.schoolconsoleapp.models;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "students")
+@Table(name = "students", schema = "school")
 public class Student {
-//	private int id;
-//	private Integer groupId;
-//	private String firstName;
-//	private String lastName;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-
-	@ManyToOne
-	@JoinColumn(name = "group_id")
-	private Group group;
 
 	@Column(name = "first_name", nullable = false)
 	private String firstName;
 
 	@Column(name = "last_name", nullable = false)
 	private String lastName;
+
+	@ManyToOne
+	@JoinColumn(name = "group_id")
+	private Group group;
+
+	@ManyToMany
+	@JoinTable(name = "students_courses", schema = "school", joinColumns = @JoinColumn(name = "student_id"), inverseJoinColumns = @JoinColumn(name = "course_id"))
+
+	private Set<Course> courses = new HashSet<>();
 
 	public Student() {
 	}
@@ -44,6 +48,20 @@ public class Student {
 		this.group = group;
 	}
 
+	public void addCourse(Course course) {
+		courses.add(course);
+		course.getStudents().add(this);
+	}
+
+	public void removeCourse(Course course) {
+		courses.remove(course);
+		course.getStudents().remove(this);
+	}
+
+	public Group getGroup() {
+		return group;
+	}
+
 	public int getId() {
 		return id;
 	}
@@ -60,6 +78,14 @@ public class Student {
 		this.firstName = firstName;
 	}
 
+	public Set<Course> getCourses() {
+		return courses;
+	}
+
+	public void setCourses(Set<Course> courses) {
+		this.courses = courses;
+	}
+
 	public String getLastName() {
 		return lastName;
 	}
@@ -69,9 +95,9 @@ public class Student {
 	}
 
 	public Integer getGroupId() {
-	    return group != null ? group.getId() : null;
+		return group != null ? group.getId() : null;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Student [id=" + id + ", group=" + (group != null ? group.getName() : "None") + ", firstName="
@@ -80,18 +106,17 @@ public class Student {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(firstName, lastName, id, group);
+	    return Objects.hash(id, firstName, lastName);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null || getClass() != obj.getClass())
-			return false;
-		Student other = (Student) obj;
-		return id == other.id && Objects.equals(firstName, other.firstName) && Objects.equals(lastName, other.lastName)
-				&& Objects.equals(group, other.group);
+	public boolean equals(Object o) {
+	    if (this == o) return true;
+	    if (o == null || getClass() != o.getClass()) return false;
+	    Student student = (Student) o;
+	    return id == student.id &&
+	           Objects.equals(firstName, student.firstName) &&
+	           Objects.equals(lastName, student.lastName);
 	}
 
 }

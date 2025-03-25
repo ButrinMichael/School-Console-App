@@ -10,9 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import ua.schoolconsoleapp.dao.CourseDAO;
+import ua.schoolconsoleapp.dao.JPACourseDAO;
 import ua.schoolconsoleapp.dao.JPAStudentDAO;
-import ua.schoolconsoleapp.dao.StudentsDAO;
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.models.Student;
@@ -34,7 +33,7 @@ public class MainApp implements CommandLineRunner {
 	private JPAStudentDAO studentsDAO;
 
 	@Autowired
-	private CourseDAO courseDAO;
+	private JPACourseDAO courseDAO;
 	
 	@Autowired
 	private StudentService studentService;

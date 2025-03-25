@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ua.schoolconsoleapp.dao.CourseDAO;
-import ua.schoolconsoleapp.dao.GroupDAO;
-import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.dao.CourseDAOld;
+import ua.schoolconsoleapp.dao.GroupDAOld;
+import ua.schoolconsoleapp.dao.StudentsDAOld;
 import ua.schoolconsoleapp.db.DBFileReader;
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
@@ -25,16 +25,16 @@ import ua.schoolconsoleapp.utils.StudentFirstLastNameGenerator;
 public class DBInitializer {
 	private static final Logger logger = LoggerFactory.getLogger(DBInitializer.class);
 	private final DBFileReader dbFileReader;
-	private final GroupDAO groupDAO;
-	private final CourseDAO courseDAO;
-	private final StudentsDAO studentsDAO;
+	private final GroupDAOld groupDAOld;
+	private final CourseDAOld courseDAOld;
+	private final StudentsDAOld studentsDAOld;
 
 	@Autowired
-	public DBInitializer(DBFileReader dbFileReader, GroupDAO groupDAO, CourseDAO courseDAO, StudentsDAO studentsDAO) {
+	public DBInitializer(DBFileReader dbFileReader, GroupDAOld groupDAOld, CourseDAOld courseDAOld, StudentsDAOld studentsDAOld) {
 		this.dbFileReader = dbFileReader;
-		this.groupDAO = groupDAO;
-		this.courseDAO = courseDAO;
-		this.studentsDAO = studentsDAO;
+		this.groupDAOld = groupDAOld;
+		this.courseDAOld = courseDAOld;
+		this.studentsDAOld = studentsDAOld;
 	}
 
 	public void initializeDatabase() {
@@ -66,7 +66,7 @@ public class DBInitializer {
 		int id = 1;
 		for (String groupName : groupNames) {
 			Group group = new Group(id++, groupName);
-			groupDAO.create(group);
+			groupDAOld.create(group);
 			 logger.debug("Inserted group: {} (ID={})", groupName, group.getId());
 		}
 		 logger.info("Inserted {} groups into the database.", groupNames.size());
@@ -78,7 +78,7 @@ public class DBInitializer {
 		int id = 1;
 		for (String courseName : courseNames) {
 			Course course = new Course(id++, courseName, "Description");
-			courseDAO.create(course);
+			courseDAOld.create(course);
 			logger.debug("Inserted course: {} (ID={})", courseName, course.getId());
         }
         logger.info("Inserted {} courses into the database.", courseNames.size());
@@ -94,7 +94,7 @@ public class DBInitializer {
 			String firstName = parts[0];
 			String lastName = parts[1];
 			Student student = new Student(0, groupId, firstName, lastName);
-			studentsDAO.create(student);
+			studentsDAOld.create(student);
 			logger.debug("Inserted student: {} {} (GroupID={})", firstName, lastName, groupId);
         }
         logger.info("Inserted {} students into the database.", studentsNames.size());
@@ -102,15 +102,15 @@ public class DBInitializer {
 
 	private void insertStudentCoursesInitialData() {
 		logger.info("Starting initial student-course assignments...");
-		List<Student> students = studentsDAO.getAll();
-		List<Course> courses = courseDAO.getAll();
+		List<Student> students = studentsDAOld.getAll();
+		List<Course> courses = courseDAOld.getAll();
 		Random random = new Random();
 		for (Student student : students) {
 			int numCourses = random.nextInt(3) + 1;
 			Collections.shuffle(courses);
 			List<Course> selectedCourses = courses.subList(0, numCourses);
 			for (Course course : selectedCourses) {
-				courseDAO.assignCourse(student.getId(), course.getId());
+				courseDAOld.assignCourse(student.getId(), course.getId());
 				logger.debug("Assigned course '{}' (ID={}) to student {} {} (ID={})",
                         course.getName(), course.getId(), student.getFirstName(), student.getLastName(), student.getId());
             }

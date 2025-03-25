@@ -26,9 +26,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import ua.SchoolConsoleApp.Services.*;
 import ua.schoolconsoleapp.MainApp;
-import ua.schoolconsoleapp.dao.CourseDAO;
-import ua.schoolconsoleapp.dao.GroupDAO;
-import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.dao.CourseDAOld;
+import ua.schoolconsoleapp.dao.GroupDAOld;
+import ua.schoolconsoleapp.dao.StudentsDAOld;
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.models.Student;
@@ -42,13 +42,13 @@ public class MainAppTest {
 	private JdbcTemplate jdbcTemplate;
 
 	@Mock
-	private StudentsDAO studentsDAO;
+	private StudentsDAOld studentsDAOld;
 
 	@Mock
-	private GroupDAO groupDAO;
+	private GroupDAOld groupDAOld;
 
 	@Mock
-	private CourseDAO courseDAO;
+	private CourseDAOld courseDAOld;
 	@Mock
 	private StudentService studentService;
 	@Mock
@@ -194,7 +194,7 @@ public class MainAppTest {
 			assertTrue(output.contains("Enter the student's name:"));
 			assertTrue(output.contains("Name cannot be empty."));
 
-			verify(studentsDAO, never()).create(any(Student.class));
+			verify(studentsDAOld, never()).create(any(Student.class));
 		} finally {
 			System.setOut(originalOut);
 		}
@@ -215,7 +215,7 @@ public class MainAppTest {
 			assertTrue(output.contains("Enter the student's name:"));
 			assertTrue(output.contains("Enter the student's surname:"));
 			assertTrue(output.contains("Surname cannot be empty."));
-			verify(studentsDAO, never()).create(any(Student.class));
+			verify(studentsDAOld, never()).create(any(Student.class));
 		} finally {
 			System.setOut(originalOut);
 		}
@@ -257,7 +257,7 @@ public class MainAppTest {
 	@Test
 	public void addStudentToCourse_shouldNotCallService_WhenStudentNotFound() throws Exception {
 	
-		when(courseDAO.getAll()).thenReturn(List.of(new Course(1, "Math")));
+		when(courseDAOld.getAll()).thenReturn(List.of(new Course(1, "Math")));
 		doThrow(new RuntimeException("Student not found: John Doe"))
         .when(studentService).addStudentToCourse("John", "Doe", "Math");
 		String input = "John\nDoe\nMath\n";
@@ -285,7 +285,7 @@ public class MainAppTest {
 		setMockScanner(input);
 
 		List<Course> courses = List.of(new Course(1, "Math"));
-		when(courseDAO.getAll()).thenReturn(courses);
+		when(courseDAOld.getAll()).thenReturn(courses);
 
 		doThrow(new RuntimeException("Course not found: Art")).when(studentService).addStudentToCourse("John", "Doe",
 				"Art");
@@ -311,7 +311,7 @@ public class MainAppTest {
 		setMockScanner(input);
 
 		List<Course> courses = List.of(new Course(1, "Math"));
-		when(courseDAO.getAll()).thenReturn(courses);
+		when(courseDAOld.getAll()).thenReturn(courses);
 		doNothing().when(studentService).addStudentToCourse("John", "Doe", "Math");
 
 		ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
@@ -334,8 +334,8 @@ public class MainAppTest {
 		String input = "Alice\nJohnson\nMath\n";
 		setMockScanner(input);
 
-		when(studentsDAO.getStudentIdByName("Alice", "Johnson")).thenReturn(1);
-		when(courseDAO.getCoursesByStudentId(1)).thenReturn(List.of(new Course(101, "Math")));
+		when(studentsDAOld.getStudentIdByName("Alice", "Johnson")).thenReturn(1);
+		when(courseDAOld.getCoursesByStudentId(1)).thenReturn(List.of(new Course(101, "Math")));
 		doNothing().when(studentService).removeStudentFromCourse("Alice", "Johnson", "Math");
 
 		ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
@@ -358,7 +358,7 @@ public class MainAppTest {
 		String input = "Jane\nDoe\nMath\n";
 		setMockScanner(input);
 
-		when(studentsDAO.getStudentIdByName("Jane", "Doe")).thenReturn(-1);
+		when(studentsDAOld.getStudentIdByName("Jane", "Doe")).thenReturn(-1);
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(outputStream));
@@ -380,8 +380,8 @@ public class MainAppTest {
 		String input = "Jane\nDoe\n";
 		setMockScanner(input);
 
-		when(studentsDAO.getStudentIdByName("Jane", "Doe")).thenReturn(1);
-		when(courseDAO.getCoursesByStudentId(1)).thenReturn(Collections.emptyList());
+		when(studentsDAOld.getStudentIdByName("Jane", "Doe")).thenReturn(1);
+		when(courseDAOld.getCoursesByStudentId(1)).thenReturn(Collections.emptyList());
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(outputStream));

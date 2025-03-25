@@ -1,27 +1,35 @@
 package ua.schoolconsoleapp.models;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+
 import jakarta.persistence.*;
 
-@Entity  
-@Table(name = "courses")
+@Entity
+@Table(name = "courses", schema = "school")
 public class Course {
-//	private int id;
-//	private String name;
-//	private String description;
-	
-	@Id  // Первичный ключ
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Автоинкремент
-    private int id;
 
-    @Column(name = "course_name", nullable = false, unique = true)  // Имя колонки в БД
-    private String name;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "course_id")
+	private int id;
 
-    @Column(name = "course_description")  // Имя колонки в БД
-    private String description;
+	@Column(name = "course_name", nullable = false, unique = true)
+	private String name;
 
-    public Course() {}	
-	
+	@Column(name = "course_description")
+	private String description;
+
+	@ManyToMany(mappedBy = "courses")
+	private Set<Student> students = new HashSet<>();
+
+	public Set<Student> getStudents() {
+		return students;
+	}
+
+	public Course() {
+	}
 
 	public Course(int id, String name, String description) {
 		this.id = id;
@@ -40,6 +48,20 @@ public class Course {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public void addStudent(Student student) {
+		students.add(student);
+		student.getCourses().add(this);
+	}
+
+	public void removeStudent(Student student) {
+		students.remove(student);
+		student.getCourses().remove(this);
+	}
+
+	public void setStudents(Set<Student> students) {
+		this.students = students;
 	}
 
 	public String getName() {

@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class CourseDAO implements Dao<Course> {
-	private static final Logger logger = LoggerFactory.getLogger(CourseDAO.class);
+public class CourseDAOld implements Dao<Course> {
+	private static final Logger logger = LoggerFactory.getLogger(CourseDAOld.class);
 	private final JdbcTemplate jdbcTemplate;
 
 	private static final String INSERT_COURSE_SQL = "INSERT INTO school.COURSES (course_name, course_description) VALUES (?, ?)";
@@ -35,7 +35,7 @@ public class CourseDAO implements Dao<Course> {
 	private static final String ASSIGN_COURSE_SQL = "INSERT INTO School.STUDENTS_COURSES (student_id, course_id) VALUES (?, ?)";
 
 	@Autowired
-	public CourseDAO(JdbcTemplate jdbcTemplate) {
+	public CourseDAOld(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
