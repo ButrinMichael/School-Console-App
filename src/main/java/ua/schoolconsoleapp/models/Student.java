@@ -12,6 +12,7 @@ public class Student {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "student_id")
 	private int id;
 
 	@Column(name = "first_name", nullable = false)
@@ -32,6 +33,12 @@ public class Student {
 	public Student() {
 	}
 
+	public Student(Group group, String firstName, String lastName) {
+	    this.group = group;
+	    this.firstName = firstName;
+	    this.lastName = lastName;
+	}
+	
 	public Student(int id, Group group, String firstName, String lastName) {
 		this.id = id;
 		this.group = group;

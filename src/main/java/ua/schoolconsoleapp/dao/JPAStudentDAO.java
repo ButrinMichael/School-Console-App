@@ -7,6 +7,7 @@ import ua.schoolconsoleapp.models.Student;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -68,6 +69,12 @@ public class JPAStudentDAO implements Dao<Student>{
         return students;
     }
 
+    public List<Student> getAllWithCourses() {
+        TypedQuery<Student> query = entityManager.createQuery(
+            "SELECT DISTINCT s FROM Student s LEFT JOIN FETCH s.courses", Student.class);
+        return query.getResultList();
+    }
+    
     public List<Student> getStudentsByCourseName(String courseName) {
         logger.info("Fetching students for course: {}", courseName);
         List<Student> students = entityManager

@@ -3,15 +3,18 @@ package ua.schoolconsoleapp.services;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ua.schoolconsoleapp.dao.CourseDAOld;
-import ua.schoolconsoleapp.dao.GroupDAOld;
-import ua.schoolconsoleapp.dao.StudentsDAOld;
+import jakarta.transaction.Transactional;
+import ua.schoolconsoleapp.dao.JPACourseDAO;
+import ua.schoolconsoleapp.dao.JPAGroupDAO;
+import ua.schoolconsoleapp.dao.JPAStudentDAO;
 import ua.schoolconsoleapp.db.DBFileReader;
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
@@ -25,22 +28,22 @@ import ua.schoolconsoleapp.utils.StudentFirstLastNameGenerator;
 public class DBInitializer {
 	private static final Logger logger = LoggerFactory.getLogger(DBInitializer.class);
 	private final DBFileReader dbFileReader;
-	private final GroupDAOld groupDAOld;
-	private final CourseDAOld courseDAOld;
-	private final StudentsDAOld studentsDAOld;
+	private final JPAGroupDAO jpaGroupDAO;
+	private final JPACourseDAO jpaCourseDAO;
+	private final JPAStudentDAO jpaStudentDAO;
 
 	@Autowired
-	public DBInitializer(DBFileReader dbFileReader, GroupDAOld groupDAOld, CourseDAOld courseDAOld, StudentsDAOld studentsDAOld) {
+	public DBInitializer(DBFileReader dbFileReader, JPAGroupDAO jpaGroupDAO, JPACourseDAO jpaCourseDAO,
+			JPAStudentDAO jpaStudentDAO) {
 		this.dbFileReader = dbFileReader;
-		this.groupDAOld = groupDAOld;
-		this.courseDAOld = courseDAOld;
-		this.studentsDAOld = studentsDAOld;
+		this.jpaGroupDAO = jpaGroupDAO;
+		this.jpaCourseDAO = jpaCourseDAO;
+		this.jpaStudentDAO = jpaStudentDAO;
 	}
 
 	public void initializeDatabase() {
 		logger.info("Starting database initialization...");
 		try {
-//			createTables();
 			insertGroupInitialData();
 			insertCourseInitialData();
 			insertStudentInitialData();
@@ -53,68 +56,102 @@ public class DBInitializer {
 		}
 	}
 
-//	private void createTables() {
-//		String dbName = "DB.sql";
-//		logger.info("Executing SQL file: {}", dbName);
-//		dbFileReader.executeSQLFile(dbName);
-//		logger.info("Tables created successfully.");
-//	}
-
-	private void insertGroupInitialData() {
+	@Transactional
+	public void insertGroupInitialData() {
 		logger.info("Starting initial group data insertion...");
 		List<String> groupNames = GroupNameGenerator.generateGroupNames(10);
-		int id = 1;
+
 		for (String groupName : groupNames) {
-			Group group = new Group(id++, groupName);
-			groupDAOld.create(group);
-			 logger.debug("Inserted group: {} (ID={})", groupName, group.getId());
+			Group group = new Group();
+			group.setName(groupName);
+			jpaGroupDAO.create(group);
+			logger.debug("Inserted group: {}", group.getName());
 		}
-		 logger.info("Inserted {} groups into the database.", groupNames.size());
+
+		logger.info("Inserted {} groups into the database.", groupNames.size());
 	}
 
-	private void insertCourseInitialData() {
+	@Transactional
+	public void insertCourseInitialData() {
 		logger.info("Starting initial course data insertion...");
 		List<String> courseNames = CourseList.CourseNames();
-		int id = 1;
+
 		for (String courseName : courseNames) {
-			Course course = new Course(id++, courseName, "Description");
-			courseDAOld.create(course);
-			logger.debug("Inserted course: {} (ID={})", courseName, course.getId());
-        }
-        logger.info("Inserted {} courses into the database.", courseNames.size());
+			Course course = new Course();
+			course.setName(courseName);
+			course.setDescription("Description");
+			jpaCourseDAO.create(course);
+			logger.debug("Inserted course: {}", course.getName());
+		}
+
+		logger.info("Inserted {} courses into the database.", courseNames.size());
 	}
 
-	private void insertStudentInitialData() throws SQLException {
-		 logger.info("Starting initial student data insertion...");
-		List<String> studentsNames = StudentFirstLastNameGenerator.generateStudents(200);
-		GroupIdGenerator groupIdGenerator = new GroupIdGenerator();
-		for (String studentName : studentsNames) {
-			Integer groupId = groupIdGenerator.generateGroupId();
+	@Transactional
+	public void insertStudentInitialData() {
+		logger.info("Starting initial student data insertion...");
+		List<String> studentNames = StudentFirstLastNameGenerator.generateStudents(200);
+		List<Group> existingGroups = jpaGroupDAO.getAll();
+
+		Random random = new Random();
+		int insertedCount = 0;
+
+		for (String studentName : studentNames) {
 			String[] parts = studentName.split(" ");
-			String firstName = parts[0];
-			String lastName = parts[1];
-			Student student = new Student(0, groupId, firstName, lastName);
-			studentsDAOld.create(student);
-			logger.debug("Inserted student: {} {} (GroupID={})", firstName, lastName, groupId);
-        }
-        logger.info("Inserted {} students into the database.", studentsNames.size());
+			if (parts.length != 2) {
+				logger.warn("Invalid student name format: {}", studentName);
+				continue;
 			}
 
-	private void insertStudentCoursesInitialData() {
-		logger.info("Starting initial student-course assignments...");
-		List<Student> students = studentsDAOld.getAll();
-		List<Course> courses = courseDAOld.getAll();
-		Random random = new Random();
-		for (Student student : students) {
-			int numCourses = random.nextInt(3) + 1;
-			Collections.shuffle(courses);
-			List<Course> selectedCourses = courses.subList(0, numCourses);
-			for (Course course : selectedCourses) {
-				courseDAOld.assignCourse(student.getId(), course.getId());
-				logger.debug("Assigned course '{}' (ID={}) to student {} {} (ID={})",
-                        course.getName(), course.getId(), student.getFirstName(), student.getLastName(), student.getId());
-            }
+			String firstName = parts[0];
+			String lastName = parts[1];
+
+			Group group = null;
+
+			if (!existingGroups.isEmpty() && random.nextDouble() > 0.1) {
+				group = existingGroups.get(random.nextInt(existingGroups.size()));
+			}
+
+			Student student = new Student(group, firstName, lastName);
+			jpaStudentDAO.create(student);
+			insertedCount++;
+
+			logger.debug("Inserted student: {} {} (GroupID={})", firstName, lastName,
+					group != null ? group.getId() : "null");
 		}
-		  logger.info("Student-course assignments completed.");
+
+		logger.info("Inserted {} students into the database.", insertedCount);
+	}
+
+	@Transactional
+	public void insertStudentCoursesInitialData() {
+		logger.info("Starting initial student-course assignments...");
+		List<Student> students = jpaStudentDAO.getAllWithCourses();
+		List<Course> courses = jpaCourseDAO.getAll();
+		Random random = new Random();
+
+		if (courses.isEmpty()) {
+			logger.warn("No courses available for assignment. Skipping student-course assignment.");
+			return;
+		}
+
+		int totalAssignments = 0;
+
+		for (Student student : students) {
+			int numCourses = random.nextInt(3) + 1; 
+			Collections.shuffle(courses);
+			List<Course> selectedCourses = courses.subList(0, Math.min(numCourses, courses.size()));
+
+			for (Course course : selectedCourses) {
+				student.getCourses().add(course);
+				logger.debug("Assigned course '{}' (ID={}) to student {} {} (ID={})", course.getName(), course.getId(),
+						student.getFirstName(), student.getLastName(), student.getId());
+				totalAssignments++;
+			}
+
+			jpaStudentDAO.update(student);
+		}
+
+		logger.info("Student-course assignments completed. Total assignments: {}", totalAssignments);
 	}
 }
