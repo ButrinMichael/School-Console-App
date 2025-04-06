@@ -105,4 +105,9 @@ public class JPAStudentDAO implements Dao<Student>{
             return Optional.empty();
         }
     }
+    public int getStudentIdByName(String firstName, String lastName) {
+        logger.info("Looking up ID for student: {} {}", firstName, lastName);
+        Optional<Student> studentOpt = findByNameAndLastName(firstName, lastName);
+        return studentOpt.map(Student::getId).orElse(-1);
+    }
 }

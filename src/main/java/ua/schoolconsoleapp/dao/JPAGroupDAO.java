@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.models.Student;
+import jakarta.persistence.TypedQuery;
 
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +67,14 @@ public class JPAGroupDAO implements Dao<Group> {
 			logger.warn("Group with ID {} not found", id);
 		}
 		return Optional.ofNullable(group);
+	}
+
+	@Transactional
+	public List<Group> findGroupsWithLessOrEqualStudents(int maxStudents) {
+		String jpql = "SELECT g FROM Group g LEFT JOIN g.students s GROUP BY g.id HAVING COUNT(s) <= :maxStudents";
+		TypedQuery<Group> query = entityManager.createQuery(jpql, Group.class);
+		query.setParameter("maxStudents", (long) maxStudents);
+		return query.getResultList();
 	}
 
 	public List<Group> getAll() {

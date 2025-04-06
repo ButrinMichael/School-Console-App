@@ -1,9 +1,8 @@
-package ua.schoolconsoleapp.services;
+package ua.schoolconsoleapp.utils;
 
-import java.sql.SQLException;
+
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -19,14 +18,12 @@ import ua.schoolconsoleapp.db.DBFileReader;
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.models.Student;
-import ua.schoolconsoleapp.utils.CourseList;
-import ua.schoolconsoleapp.utils.GroupIdGenerator;
-import ua.schoolconsoleapp.utils.GroupNameGenerator;
-import ua.schoolconsoleapp.utils.StudentFirstLastNameGenerator;
 
 @Component
 public class DBInitializer {
+	
 	private static final Logger logger = LoggerFactory.getLogger(DBInitializer.class);
+	
 	private final DBFileReader dbFileReader;
 	private final JPAGroupDAO jpaGroupDAO;
 	private final JPACourseDAO jpaCourseDAO;
