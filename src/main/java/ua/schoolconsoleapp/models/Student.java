@@ -1,16 +1,47 @@
 package ua.schoolconsoleapp.models;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "students", schema = "school")
 public class Student {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "student_id")
 	private int id;
-	private Integer groupId;
+
+	@Column(name = "first_name", nullable = false)
 	private String firstName;
+
+	@Column(name = "last_name", nullable = false)
 	private String lastName;
 
-	public Student(int id, Integer groupId, String firstName, String lastName) {
+	@ManyToOne
+	@JoinColumn(name = "group_id")
+	private Group group;
+
+	@ManyToMany
+	@JoinTable(name = "students_courses", schema = "school", joinColumns = @JoinColumn(name = "student_id"), inverseJoinColumns = @JoinColumn(name = "course_id"))
+
+	private Set<Course> courses = new HashSet<>();
+
+	public Student() {
+	}
+
+	public Student(Group group, String firstName, String lastName) {
+	    this.group = group;
+	    this.firstName = firstName;
+	    this.lastName = lastName;
+	}
+	
+	public Student(int id, Group group, String firstName, String lastName) {
 		this.id = id;
-		this.groupId = groupId;
+		this.group = group;
 		this.firstName = firstName;
 		this.lastName = lastName;
 	}
@@ -20,8 +51,22 @@ public class Student {
 		this.lastName = lastName;
 	}
 
-	public void setGroupId(Integer groupId) {
-		this.groupId = groupId;
+	public void setGroup(Group group) {
+		this.group = group;
+	}
+
+	public void addCourse(Course course) {
+		courses.add(course);
+		course.getStudents().add(this);
+	}
+
+	public void removeCourse(Course course) {
+		courses.remove(course);
+		course.getStudents().remove(this);
+	}
+
+	public Group getGroup() {
+		return group;
 	}
 
 	public int getId() {
@@ -32,16 +77,20 @@ public class Student {
 		this.id = id;
 	}
 
-	public Integer getGroupId() {
-		return groupId;
-	}
-
 	public String getFirstName() {
 		return firstName;
 	}
 
 	public void setFirstName(String firstName) {
 		this.firstName = firstName;
+	}
+
+	public Set<Course> getCourses() {
+		return courses;
+	}
+
+	public void setCourses(Set<Course> courses) {
+		this.courses = courses;
 	}
 
 	public String getLastName() {
@@ -52,28 +101,29 @@ public class Student {
 		this.lastName = lastName;
 	}
 
+	public Integer getGroupId() {
+		return group != null ? group.getId() : null;
+	}
+
 	@Override
 	public String toString() {
-		return "Student [id=" + id + ", groupId=" + groupId + ", firstName=" + firstName + ", lastName=" + lastName
-				+ "]";
+		return "Student [id=" + id + ", group=" + (group != null ? group.getName() : "None") + ", firstName="
+				+ firstName + ", lastName=" + lastName + "]";
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(firstName, groupId, id, lastName);
+	    return Objects.hash(id, firstName, lastName);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Student other = (Student) obj;
-		return Objects.equals(firstName, other.firstName) && groupId == other.groupId && id == other.id
-				&& Objects.equals(lastName, other.lastName);
+	public boolean equals(Object o) {
+	    if (this == o) return true;
+	    if (o == null || getClass() != o.getClass()) return false;
+	    Student student = (Student) o;
+	    return id == student.id &&
+	           Objects.equals(firstName, student.firstName) &&
+	           Objects.equals(lastName, student.lastName);
 	}
 
 }
