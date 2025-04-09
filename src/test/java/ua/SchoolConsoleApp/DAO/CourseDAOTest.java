@@ -28,7 +28,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
-import ua.schoolconsoleapp.dao.CourseDAO;
+import ua.schoolconsoleapp.dao.CourseDAOld;
 import ua.schoolconsoleapp.models.Course;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,7 +51,7 @@ public class CourseDAOTest {
 	private RowMapper<Course> courseRowMapper;
 
 	@InjectMocks
-	private CourseDAO courseDAO;
+	private CourseDAOld courseDAOld;
 	private Course testCourse;
 
 	@BeforeEach
@@ -62,7 +62,7 @@ public class CourseDAOTest {
 	@Test
     public void create_schouldCreateCourse() {
             when(jdbcTemplate.update(anyString(),anyString(),anyString())).thenReturn(1);
-        			courseDAO.create(testCourse);	      
+        			courseDAOld.create(testCourse);	      
           verify(jdbcTemplate, times(1)).update(
         		    eq(INSERT_COURSE_SQL),
         		    eq(testCourse.getName()),
@@ -75,7 +75,7 @@ public class CourseDAOTest {
 	    when(jdbcTemplate.update(anyString(), anyString(),anyString()))
 	            .thenThrow(new DataAccessException("Database error") {});    
 	    DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-	    	courseDAO.create(testCourse);	
+	    	courseDAOld.create(testCourse);	
 	    });
 	    assertEquals("Database error", exception.getMessage());
 	    verify(jdbcTemplate, times(1)).update(eq(INSERT_COURSE_SQL), eq(testCourse.getName()),eq(testCourse.getDescription()));
@@ -85,7 +85,7 @@ public class CourseDAOTest {
 	public void read_shouldReturnResult_whenCourseFound() {    
 	    when(jdbcTemplate.query(eq(SELECT_COURS_BY_ID_SQL), any(RowMapper.class), eq(1)))
 	            .thenReturn(Collections.singletonList(testCourse));
-	    Optional<Course> result = courseDAO.read(1);
+	    Optional<Course> result = courseDAOld.read(1);
 	    assertTrue(result.isPresent(), "Expected a course to be present in the Optional");
 	    assertEquals(testCourse, result.get(), "The course returned does not match the expected course");
 	    verify(jdbcTemplate, times(1)).query(eq(SELECT_COURS_BY_ID_SQL), any(RowMapper.class), eq(1));
@@ -96,7 +96,7 @@ public class CourseDAOTest {
 	    when(jdbcTemplate.query(anyString(), any(RowMapper.class), anyInt()))
 	            .thenThrow(new DataAccessException("Failed to read course") {});    
 	    DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-	    	courseDAO.read(1);
+	    	courseDAOld.read(1);
 	    });
 	    assertEquals("Failed to read course", exception.getMessage());
 	    verify(jdbcTemplate, times(1)).query(eq(SELECT_COURS_BY_ID_SQL), any(RowMapper.class), eq(1));
@@ -105,14 +105,14 @@ public class CourseDAOTest {
 	@Test
 	public void read_shouldReturnEmptyCourse_whenCourseNotFound() {
 	      when(jdbcTemplate.query(anyString(), any(RowMapper.class), anyInt())).thenReturn(Collections.emptyList());
-	    Optional<Course> result = courseDAO.read(1);
+	    Optional<Course> result = courseDAOld.read(1);
 	    assertFalse(result.isPresent(), "Expected no course to be present in the Optional when none is found");
 	    verify(jdbcTemplate, times(1)).query(eq(SELECT_COURS_BY_ID_SQL), any(RowMapper.class), eq(1));
 	}
 
 	@Test
 	public void update_schouldUpdateCourse() {
-		courseDAO.update(testCourse);
+		courseDAOld.update(testCourse);
 		verify(jdbcTemplate, times(1)).update(UPDATE_COURSE_SQL, testCourse.getName(), testCourse.getDescription(),
 				testCourse.getId());
 	}
@@ -120,7 +120,7 @@ public class CourseDAOTest {
 	@Test
 	public void update_schouldThrowNullPointerException_whenCourseisNull() {
 		assertThrows(NullPointerException.class, () -> {
-			courseDAO.update(null);
+			courseDAOld.update(null);
 		});
 	}
 
@@ -129,7 +129,7 @@ public class CourseDAOTest {
 	    when(jdbcTemplate.update(anyString(), anyString(), anyString(), anyInt())).thenThrow(new DataAccessException("Database error") {});
 	    
 	    DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-	    	courseDAO.update(testCourse);
+	    	courseDAOld.update(testCourse);
 	    });	
 	    
 	    assertEquals("Database error",  exception.getMessage());
@@ -138,7 +138,7 @@ public class CourseDAOTest {
 
 	@Test
 	public void delete_schouldPerformInOrder() {
-		courseDAO.delete(1);
+		courseDAOld.delete(1);
 		InOrder inOrder = inOrder(jdbcTemplate);
 		inOrder.verify(jdbcTemplate).update(DELETE_STUDENT_COURSE_SQL, 1);
 		inOrder.verify(jdbcTemplate).update(DELETE_COURSE_SQL, 1);
@@ -146,21 +146,21 @@ public class CourseDAOTest {
 
 	@Test
 	public void delete_shouldDeleteCourse_WithPositiveId() {
-		courseDAO.delete(1);
+		courseDAOld.delete(1);
 		verify(jdbcTemplate).update(DELETE_STUDENT_COURSE_SQL, 1);
 		verify(jdbcTemplate).update(DELETE_COURSE_SQL, 1);
 	}
 
 	@Test
 	public void delete_shouldDeleteCourse_WithZeroId() {
-		courseDAO.delete(0);
+		courseDAOld.delete(0);
 		verify(jdbcTemplate).update(DELETE_STUDENT_COURSE_SQL, 0);
 		verify(jdbcTemplate).update(DELETE_COURSE_SQL, 0);
 	}
 
 	@Test
 	public void delete_shouldDeleteCourse_WithNegativeId() {
-		courseDAO.delete(-1);
+		courseDAOld.delete(-1);
 		verify(jdbcTemplate).update(DELETE_STUDENT_COURSE_SQL, -1);
 		verify(jdbcTemplate).update(DELETE_COURSE_SQL, -1);
 	}
@@ -171,7 +171,7 @@ public class CourseDAOTest {
                 .thenThrow(new DataAccessException("Database error while deleting from STUDENTS_COURSES") {});
 
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            courseDAO.delete(1);
+            courseDAOld.delete(1);
         });
         assertEquals("Database error while deleting from STUDENTS_COURSES", exception.getMessage());
         verify(jdbcTemplate, times(0)).update(DELETE_COURSE_SQL, 1);
@@ -184,7 +184,7 @@ public class CourseDAOTest {
         when(jdbcTemplate.update(eq(DELETE_COURSE_SQL), eq(1)))
                 .thenThrow(new DataAccessException("Database error while deleting from COURSES") {});
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            courseDAO.delete(1);
+            courseDAOld.delete(1);
         });
         assertEquals("Database error while deleting from COURSES", exception.getMessage());
         verify(jdbcTemplate, times(1)).update(DELETE_STUDENT_COURSE_SQL, 1);
@@ -194,7 +194,7 @@ public class CourseDAOTest {
 	@Test
 	public void getAll_schouldReturnCourseList() {
 	    when(jdbcTemplate.query(anyString(), any(RowMapper.class))).thenReturn(Collections.singletonList(testCourse));
-	    List<Course> result = courseDAO.getAll();
+	    List<Course> result = courseDAOld.getAll();
 	    assertEquals(1, result.size());
 	    assertEquals("Test Name", result.get(0).getName());
 	    assertEquals("Test Description", result.get(0).getDescription());
@@ -206,7 +206,7 @@ public class CourseDAOTest {
 	    when(jdbcTemplate.query(anyString(), any(RowMapper.class)))
 	            .thenThrow(new DataAccessException("Failed to fetch courses") {});    
 	    DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-	    	courseDAO.getAll();
+	    	courseDAOld.getAll();
 	    });
 	    assertEquals("Failed to fetch courses", exception.getMessage());
 	    verify(jdbcTemplate, times(1)).query(eq(SELECT_ALL_COURSES_SQL), any(RowMapper.class));
@@ -217,7 +217,7 @@ public class CourseDAOTest {
 		
 		when(jdbcTemplate.queryForObject(eq(SELECT_COURSE_ID_BY_NAME_SQL),
 				eq(Integer.class), eq(testCourse.getName()))).thenReturn(testCourse.getId());
-		int result = courseDAO.getCourseIdByName(testCourse.getName());
+		int result = courseDAOld.getCourseIdByName(testCourse.getName());
 		assertEquals(testCourse.getId(), result);
 		verify(jdbcTemplate, times(1)).queryForObject(eq(SELECT_COURSE_ID_BY_NAME_SQL),
 				eq(Integer.class), eq(testCourse.getName()));
@@ -228,7 +228,7 @@ public class CourseDAOTest {
 	     when(jdbcTemplate.queryForObject(
 	            eq(SELECT_COURSE_ID_BY_NAME_SQL),eq(Integer.class),eq(testCourse.getName())))
 	        .thenThrow(new EmptyResultDataAccessException(1));
-	    int result = courseDAO.getCourseIdByName(testCourse.getName());
+	    int result = courseDAOld.getCourseIdByName(testCourse.getName());
 	    assertEquals(-1, result);
 	    verify(jdbcTemplate, times(1)).queryForObject(
 	            eq(SELECT_COURSE_ID_BY_NAME_SQL),eq(Integer.class),eq(testCourse.getName()));
@@ -239,7 +239,7 @@ public class CourseDAOTest {
 	    when(jdbcTemplate.queryForObject(
 	            eq(SELECT_COURSE_ID_BY_NAME_SQL),eq(Integer.class),eq(testCourse.getName())))
 	        .thenThrow(new DataAccessException("Database error while deleting from COURSES") {});
-	int result = courseDAO.getCourseIdByName(testCourse.getName());
+	int result = courseDAOld.getCourseIdByName(testCourse.getName());
     assertEquals(-1, result);
     verify(jdbcTemplate, times(1)).queryForObject(
             eq(SELECT_COURSE_ID_BY_NAME_SQL),eq(Integer.class),eq(testCourse.getName()));
@@ -251,7 +251,7 @@ public class CourseDAOTest {
 		int studentId = 1;
 		when(jdbcTemplate.queryForObject(eq(CHECK_STUDENTENROLLMENT_SQL), eq(Integer.class), eq(studentId),
 				eq(testCourse.getId()))).thenReturn(1);
-		boolean result = courseDAO.isStudentEnrolled(studentId, testCourse.getId());
+		boolean result = courseDAOld.isStudentEnrolled(studentId, testCourse.getId());
 		assertTrue(result);
 		verify(jdbcTemplate, times(1)).queryForObject(eq(CHECK_STUDENTENROLLMENT_SQL), eq(Integer.class), eq(studentId),
 				eq(testCourse.getId()));
@@ -262,7 +262,7 @@ public class CourseDAOTest {
 		int studentId = 1;
 		when(jdbcTemplate.queryForObject(eq(CHECK_STUDENTENROLLMENT_SQL), eq(Integer.class), eq(studentId),
 				eq(testCourse.getId()))).thenReturn(0);
-		boolean result = courseDAO.isStudentEnrolled(studentId, testCourse.getId());
+		boolean result = courseDAOld.isStudentEnrolled(studentId, testCourse.getId());
 		assertFalse(result);
 		verify(jdbcTemplate, times(1)).queryForObject(eq(CHECK_STUDENTENROLLMENT_SQL), eq(Integer.class), eq(studentId),
 				eq(testCourse.getId()));
@@ -273,7 +273,7 @@ public class CourseDAOTest {
 		int studentId = 1;
 		when(jdbcTemplate.queryForObject(eq(CHECK_STUDENTENROLLMENT_SQL), eq(Integer.class), eq(studentId),
 				eq(testCourse.getId()))).thenThrow(new EmptyResultDataAccessException(1));
-		boolean result = courseDAO.isStudentEnrolled(studentId, testCourse.getId());
+		boolean result = courseDAOld.isStudentEnrolled(studentId, testCourse.getId());
 		assertFalse(result);
 		verify(jdbcTemplate, times(1)).queryForObject(eq(CHECK_STUDENTENROLLMENT_SQL), eq(Integer.class), eq(studentId),
 				eq(testCourse.getId()));
@@ -286,7 +286,7 @@ public class CourseDAOTest {
 				eq(testCourse.getId()))).thenThrow(new DataAccessException("Database error") {
 				});
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			courseDAO.isStudentEnrolled(studentId, testCourse.getId());
+			courseDAOld.isStudentEnrolled(studentId, testCourse.getId());
 		});
 		assertEquals("Failed to check student enrollment", exception.getMessage());
 		verify(jdbcTemplate, times(1)).queryForObject(eq(CHECK_STUDENTENROLLMENT_SQL), eq(Integer.class), eq(studentId),
@@ -299,7 +299,7 @@ public class CourseDAOTest {
 		List<Course> expectedCourses = Collections.singletonList(testCourse);
 		when(jdbcTemplate.query(eq(SELECT_COURSE_BY_STUDENT_ID_SQL), any(RowMapper.class), eq(testCourse.getId())))
 				.thenReturn(expectedCourses);
-		List<Course> result = courseDAO.getCoursesByStudentId(testCourse.getId());
+		List<Course> result = courseDAOld.getCoursesByStudentId(testCourse.getId());
 		assertEquals(expectedCourses.size(), result.size());
 		assertEquals(expectedCourses.get(0).getName(), result.get(0).getName());
 		verify(jdbcTemplate, times(1)).query(eq(SELECT_COURSE_BY_STUDENT_ID_SQL), any(RowMapper.class),
@@ -313,7 +313,7 @@ public class CourseDAOTest {
 	            any(RowMapper.class), 
 	            eq(testCourse.getId())
 	    )).thenReturn(Collections.emptyList());
-	    List<Course> result = courseDAO.getCoursesByStudentId(testCourse.getId());
+	    List<Course> result = courseDAOld.getCoursesByStudentId(testCourse.getId());
 	    assertTrue(result.isEmpty());
 	    verify(jdbcTemplate, times(1)).query(
 	            eq(SELECT_COURSE_BY_STUDENT_ID_SQL),
@@ -330,7 +330,7 @@ public class CourseDAOTest {
 	            eq(testCourse.getId())
 	    )).thenThrow(new DataAccessException("Failed to retrieve courses") {});
 	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-	        courseDAO.getCoursesByStudentId(testCourse.getId());
+	        courseDAOld.getCoursesByStudentId(testCourse.getId());
 	    });
 	    assertEquals("Failed to retrieve courses for the student", exception.getMessage());
 	    verify(jdbcTemplate, times(1)).query(
@@ -343,7 +343,7 @@ public class CourseDAOTest {
 	@Test
 	public void assignCourse_shouldAssignCourseSuccessfully() {
 		int studentId = 1;
-		courseDAO.assignCourse(studentId, testCourse.getId());
+		courseDAOld.assignCourse(studentId, testCourse.getId());
 		verify(jdbcTemplate, times(1)).update(eq(ASSIGN_COURSE_SQL), eq(studentId), eq(testCourse.getId()));
 	}
 
@@ -354,7 +354,7 @@ public class CourseDAOTest {
 		});
 
 		assertThrows(DataAccessException.class, () -> {
-			courseDAO.assignCourse(studentId, testCourse.getId());
+			courseDAOld.assignCourse(studentId, testCourse.getId());
 		});
 		verify(jdbcTemplate, times(1)).update(eq(ASSIGN_COURSE_SQL), eq(studentId), eq(testCourse.getId()));
 	}

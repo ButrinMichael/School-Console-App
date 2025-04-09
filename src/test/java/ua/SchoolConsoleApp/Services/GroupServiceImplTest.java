@@ -13,18 +13,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import ua.schoolconsoleapp.dao.GroupDAO;
-import ua.schoolconsoleapp.dao.StudentsDAO;
+import ua.schoolconsoleapp.dao.GroupDAOld;
+import ua.schoolconsoleapp.dao.StudentsDAOld;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.services.GroupServiceImpl;
 
 public class GroupServiceImplTest {
 
     @Mock
-    private GroupDAO groupDAO;
+    private GroupDAOld groupDAOld;
 
     @Mock
-    private StudentsDAO studentsDAO;
+    private StudentsDAOld studentsDAOld;
 
     @InjectMocks
     private GroupServiceImpl groupService;
@@ -42,10 +42,10 @@ public class GroupServiceImplTest {
 
         List<Group> allGroups = Arrays.asList(group1, group2, group3);
 
-        when(groupDAO.getAll()).thenReturn(allGroups);
-        when(studentsDAO.getNumStudentsInGroup(1)).thenReturn(5);
-        when(studentsDAO.getNumStudentsInGroup(2)).thenReturn(10);
-        when(studentsDAO.getNumStudentsInGroup(3)).thenReturn(15);
+        when(groupDAOld.getAll()).thenReturn(allGroups);
+        when(studentsDAOld.getNumStudentsInGroup(1)).thenReturn(5);
+        when(studentsDAOld.getNumStudentsInGroup(2)).thenReturn(10);
+        when(studentsDAOld.getNumStudentsInGroup(3)).thenReturn(15);
 
         int maxStudents = 10;
         List<Group> result = groupService.findGroupsWithLessOrEqualStudents(maxStudents);
@@ -55,10 +55,10 @@ public class GroupServiceImplTest {
         assertTrue(result.contains(group2));
         assertFalse(result.contains(group3));
 
-        verify(groupDAO, times(1)).getAll();
-        verify(studentsDAO, times(1)).getNumStudentsInGroup(1);
-        verify(studentsDAO, times(1)).getNumStudentsInGroup(2);
-        verify(studentsDAO, times(1)).getNumStudentsInGroup(3);
+        verify(groupDAOld, times(1)).getAll();
+        verify(studentsDAOld, times(1)).getNumStudentsInGroup(1);
+        verify(studentsDAOld, times(1)).getNumStudentsInGroup(2);
+        verify(studentsDAOld, times(1)).getNumStudentsInGroup(3);
     }
 
     @Test
@@ -68,41 +68,41 @@ public class GroupServiceImplTest {
 
         List<Group> allGroups = Arrays.asList(group1, group2);
 
-        when(groupDAO.getAll()).thenReturn(allGroups);
-        when(studentsDAO.getNumStudentsInGroup(1)).thenReturn(15);
-        when(studentsDAO.getNumStudentsInGroup(2)).thenReturn(20);
+        when(groupDAOld.getAll()).thenReturn(allGroups);
+        when(studentsDAOld.getNumStudentsInGroup(1)).thenReturn(15);
+        when(studentsDAOld.getNumStudentsInGroup(2)).thenReturn(20);
 
         int maxStudents = 10;
         List<Group> result = groupService.findGroupsWithLessOrEqualStudents(maxStudents);
 
         assertTrue(result.isEmpty());
 
-        verify(groupDAO, times(1)).getAll();
-        verify(studentsDAO, times(1)).getNumStudentsInGroup(1);
-        verify(studentsDAO, times(1)).getNumStudentsInGroup(2);
+        verify(groupDAOld, times(1)).getAll();
+        verify(studentsDAOld, times(1)).getNumStudentsInGroup(1);
+        verify(studentsDAOld, times(1)).getNumStudentsInGroup(2);
     }
 
     @Test
     public void findGroupsWithLessOrEqualStudents_shouldThrowException_WhenGroupDAOFails() {
-        when(groupDAO.getAll()).thenThrow(new RuntimeException("Database error"));
+        when(groupDAOld.getAll()).thenThrow(new RuntimeException("Database error"));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             groupService.findGroupsWithLessOrEqualStudents(10);
         });
 
         assertEquals("Failed to find groups with less or equal students", exception.getMessage());
-        verify(groupDAO, times(1)).getAll();
+        verify(groupDAOld, times(1)).getAll();
     }
 
     @Test
     public void findGroupsWithLessOrEqualStudents_shouldHandleEmptyGroupList() {
-        when(groupDAO.getAll()).thenReturn(new ArrayList<>());
+        when(groupDAOld.getAll()).thenReturn(new ArrayList<>());
 
         int maxStudents = 10;
         List<Group> result = groupService.findGroupsWithLessOrEqualStudents(maxStudents);
 
         assertTrue(result.isEmpty());
-        verify(groupDAO, times(1)).getAll();
-        verifyNoInteractions(studentsDAO); 
+        verify(groupDAOld, times(1)).getAll();
+        verifyNoInteractions(studentsDAOld); 
     }
 }
