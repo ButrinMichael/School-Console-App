@@ -6,18 +6,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import ua.schoolconsoleapp.dao.JPAGroupDAO;
 import ua.schoolconsoleapp.models.Group;
+import ua.schoolconsoleapp.repositories.GroupRepository;
 
 @Service
 public class GroupServiceImpl implements GroupService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(GroupServiceImpl.class);
 
-	private final JPAGroupDAO groupDAO;
+	private final GroupRepository groupRepository;
 
-	public GroupServiceImpl(JPAGroupDAO groupDAO) {
-		this.groupDAO = groupDAO;
+	public GroupServiceImpl(GroupRepository groupRepository) {
+		this.groupRepository = groupRepository;
 
 	}
 	
@@ -25,7 +25,7 @@ public class GroupServiceImpl implements GroupService {
     public List<Group> findGroupsWithLessOrEqualStudents(int maxStudents) {
         logger.info("Method findGroupsWithLessOrEqualStudents called with maxStudents = {}", maxStudents);
         try {
-            List<Group> result = groupDAO.findGroupsWithLessOrEqualStudents(maxStudents);
+            List<Group> result = groupRepository.findGroupsWithLessOrEqualStudents(maxStudents);
             logger.info("Found {} groups with student count less than or equal to {}", result.size(), maxStudents);
             return result;
         } catch (RuntimeException e) {

@@ -11,13 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
-import ua.schoolconsoleapp.dao.JPACourseDAO;
-import ua.schoolconsoleapp.dao.JPAGroupDAO;
-import ua.schoolconsoleapp.dao.JPAStudentDAO;
 import ua.schoolconsoleapp.db.DBFileReader;
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.models.Student;
+import ua.schoolconsoleapp.repositories.CourseRepository;
+import ua.schoolconsoleapp.repositories.GroupRepository;
+import ua.schoolconsoleapp.repositories.StudentRepository;
 
 @Component
 public class DBInitializer {
@@ -25,17 +25,17 @@ public class DBInitializer {
 	private static final Logger logger = LoggerFactory.getLogger(DBInitializer.class);
 	
 	private final DBFileReader dbFileReader;
-	private final JPAGroupDAO jpaGroupDAO;
-	private final JPACourseDAO jpaCourseDAO;
-	private final JPAStudentDAO jpaStudentDAO;
+	private final GroupRepository groupRepository;
+	private final CourseRepository courseRepository;
+	private final StudentRepository studentRepository;
 
-	@Autowired
-	public DBInitializer(DBFileReader dbFileReader, JPAGroupDAO jpaGroupDAO, JPACourseDAO jpaCourseDAO,
-			JPAStudentDAO jpaStudentDAO) {
+//	@Autowired
+	public DBInitializer(DBFileReader dbFileReader, GroupRepository groupRepository, CourseRepository courseRepository,
+			StudentRepository studentRepository) {
 		this.dbFileReader = dbFileReader;
-		this.jpaGroupDAO = jpaGroupDAO;
-		this.jpaCourseDAO = jpaCourseDAO;
-		this.jpaStudentDAO = jpaStudentDAO;
+		this.groupRepository = groupRepository;
+		this.courseRepository = courseRepository;
+		this.studentRepository = studentRepository;
 	}
 
 	public void initializeDatabase() {
@@ -61,7 +61,7 @@ public class DBInitializer {
 		for (String groupName : groupNames) {
 			Group group = new Group();
 			group.setName(groupName);
-			jpaGroupDAO.create(group);
+			groupRepository.save(group);
 			logger.debug("Inserted group: {}", group.getName());
 		}
 
@@ -77,7 +77,7 @@ public class DBInitializer {
 			Course course = new Course();
 			course.setName(courseName);
 			course.setDescription("Description");
-			jpaCourseDAO.create(course);
+			courseRepository.save(course);
 			logger.debug("Inserted course: {}", course.getName());
 		}
 
@@ -88,7 +88,7 @@ public class DBInitializer {
 	public void insertStudentInitialData() {
 		logger.info("Starting initial student data insertion...");
 		List<String> studentNames = StudentFirstLastNameGenerator.generateStudents(200);
-		List<Group> existingGroups = jpaGroupDAO.getAll();
+		List<Group> existingGroups = groupRepository.findAll();
 
 		Random random = new Random();
 		int insertedCount = 0;
@@ -110,7 +110,7 @@ public class DBInitializer {
 			}
 
 			Student student = new Student(group, firstName, lastName);
-			jpaStudentDAO.create(student);
+			studentRepository.save(student);
 			insertedCount++;
 
 			logger.debug("Inserted student: {} {} (GroupID={})", firstName, lastName,
@@ -123,8 +123,8 @@ public class DBInitializer {
 	@Transactional
 	public void insertStudentCoursesInitialData() {
 		logger.info("Starting initial student-course assignments...");
-		List<Student> students = jpaStudentDAO.getAllWithCourses();
-		List<Course> courses = jpaCourseDAO.getAll();
+		List<Student> students = studentRepository.findAllWithCourses();
+		List<Course> courses = courseRepository.findAll();
 		Random random = new Random();
 
 		if (courses.isEmpty()) {
@@ -146,7 +146,7 @@ public class DBInitializer {
 				totalAssignments++;
 			}
 
-			jpaStudentDAO.update(student);
+			studentRepository.save(student);
 		}
 
 		logger.info("Student-course assignments completed. Total assignments: {}", totalAssignments);
