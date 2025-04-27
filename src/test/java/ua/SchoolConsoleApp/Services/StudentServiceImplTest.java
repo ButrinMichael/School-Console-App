@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,264 +14,222 @@ import org.mockito.Mock;
 
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import ua.SchoolConsoleApp.DAO.CourseDAO;
-import ua.SchoolConsoleApp.DAO.StudentsDAO;
-import ua.SchoolConsoleApp.Student;
+import ua.schoolconsoleapp.models.Course;
+import ua.schoolconsoleapp.models.Student;
+import ua.schoolconsoleapp.repositories.CourseRepository;
+import ua.schoolconsoleapp.repositories.StudentRepository;
+import ua.schoolconsoleapp.services.StudentServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class StudentServiceImplTest {
 
-    @Mock
-    private CourseDAO courseDAO;
+	@Mock
+    private StudentRepository studentRepository;
 
     @Mock
-    private StudentsDAO studentsDAO;
+    private CourseRepository courseRepository;
 
     @InjectMocks
     private StudentServiceImpl studentService;
 
-    @Test
-    public void findStudentsByCourseName_shouldReturnStudents_WhenCourseAndStudentsExist() {
-        String courseName = "Math";
-        int courseId = 1;
-        List<Student> students = List.of(
-                new Student(1, 1, "Alice", "Smith"),
-                new Student(2, 1, "Bob", "Johnson")
-        );
-
-        when(courseDAO.getCourseIdByName(courseName)).thenReturn(courseId);
-        when(studentsDAO.getStudentsByCourseName(courseName)).thenReturn(students);
-
-        List<Student> result = studentService.findStudentsByCourseName(courseName);
-
-        assertEquals(2, result.size());
-        assertEquals(students, result);
-        verify(courseDAO, times(1)).getCourseIdByName(courseName);
-        verify(studentsDAO, times(1)).getStudentsByCourseName(courseName);
-    }
-    @Test
-    public void findStudentsByCourseName_shouldReturnEmptyList_WhenCourseNotFound() {
-        String courseName = "UnknownCourse";
-
-        when(courseDAO.getCourseIdByName(courseName)).thenReturn(-1);
-
-        List<Student> result = studentService.findStudentsByCourseName(courseName);
-
-        assertTrue(result.isEmpty());
-        verify(courseDAO, times(1)).getCourseIdByName(courseName);
-        verify(studentsDAO, never()).getStudentsByCourseName(anyString());
-    }
-
-  
-    @Test
-    public void findStudentsByCourseName_shouldReturnEmptyList_WhenNoStudentsOnCourse() {
-        String courseName = "Math";
-        int courseId = 1;
-
-        when(courseDAO.getCourseIdByName(courseName)).thenReturn(courseId);
-        when(studentsDAO.getStudentsByCourseName(courseName)).thenReturn(List.of());
-
-        List<Student> result = studentService.findStudentsByCourseName(courseName);
-
-        assertTrue(result.isEmpty());
-        verify(courseDAO, times(1)).getCourseIdByName(courseName);
-        verify(studentsDAO, times(1)).getStudentsByCourseName(courseName);
+    private Student student;
+    private Course course;
+    
+    @BeforeEach
+    void setUp() {    	
+        student = new Student();
+        student.setId(1);
+        student.setFirstName("John");
+        student.setLastName("Doe");
+        course = new Course();
+        course.setId(10);
+        course.setName("Math");
     }
     
     @Test
-    public void addNewStudent_shouldCallDAOCreate_WhenStudentIsValid() {
-        Student validStudent = new Student("John", "Doe");
+    void getCoursesByStudentName_shouldReturnCourses_whenStudentExists() {        
+        student.getCourses().add(course);
+        when(studentRepository.findWithCoursesByFirstNameAndLastName("John", "Doe"))
+            .thenReturn(Optional.of(student));
+        
+        List<Course> result = studentService.getCoursesByStudentName("John", "Doe");
 
-        studentService.addNewStudent(validStudent);
+        
+        assertEquals(1, result.size());
+        assertSame(course, result.get(0));
+    }
 
-        verify(studentsDAO, times(1)).create(validStudent);
+    @Test
+    void getCoursesByStudentName_shouldThrow_whenStudentNotFound() {
+    	  when(studentRepository.findWithCoursesByFirstNameAndLastName("X", "Y"))
+          .thenReturn(Optional.empty());
+    	  
+    	  RuntimeException ex = assertThrows(RuntimeException.class,
+    	            () -> studentService.getCoursesByStudentName("X", "Y"));
+
+    	        assertEquals("Student not found", ex.getMessage());
+    	
     }
     
     @Test
-    public void addNewStudent_shouldThrowException_WhenFirstNameIsEmpty() {
-        Student invalidStudent = new Student("", "Doe");
+    void findStudentsByCourseName_shouldDelegateToRepository() {
+        List<Student> students = List.of(student);
+        when(studentRepository.findStudentsByCourseName("Math"))
+            .thenReturn(students);
 
-        Exception exception = assertThrows(IllegalArgumentException.class, 
-            () -> studentService.addNewStudent(invalidStudent));
+        List<Student> result = studentService.findStudentsByCourseName("Math");
 
-        assertEquals("Name or surname cannot be empty.", exception.getMessage());
-        verify(studentsDAO, never()).create(any());
+        assertSame(students, result);
+        verify(studentRepository).findStudentsByCourseName("Math");
     }
     
     @Test
-    public void addNewStudent_shouldThrowException_WhenLastNameIsEmpty() {
-        Student invalidStudent = new Student("John", "");
+    void addNewStudent_shouldSave_whenValid() {
+        Student s = new Student();
+        s.setFirstName("A");
+        s.setLastName("B");
 
-        Exception exception = assertThrows(IllegalArgumentException.class, 
-            () -> studentService.addNewStudent(invalidStudent));
+        studentService.addNewStudent(s);
 
-        assertEquals("Name or surname cannot be empty.", exception.getMessage());
-        verify(studentsDAO, never()).create(any());
-    }
-    @Test
-    public void deleteStudentById_shouldDeleteStudent_WhenValidId() {
-
-        int studentId = 1;
-        Student student = new Student("John", "Doe");
-        when(studentsDAO.read(studentId)).thenReturn(Optional.of(student));
-        doNothing().when(studentsDAO).delete(studentId);
-
-
-        studentService.deleteStudentById(studentId);
-
-
-        verify(studentsDAO, times(1)).read(studentId);
-        verify(studentsDAO, times(1)).delete(studentId);
-    }
-
-    @Test
-    public void deleteStudentById_shouldThrowException_WhenStudentDoesNotExist() {
-
-        int studentId = 1;
-        when(studentsDAO.read(studentId)).thenReturn(Optional.empty());
-
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> studentService.deleteStudentById(studentId));
-        assertEquals("Failed to delete student: Student with ID 1 does not exist.", exception.getMessage());
-        verify(studentsDAO, times(1)).read(studentId);
-        verify(studentsDAO, never()).delete(studentId);
-    }
-
-    @Test
-    public void deleteStudentById_shouldThrowException_WhenDeleteFails() {
-
-        int studentId = 1;
-        Student student = new Student("John", "Doe");
-        when(studentsDAO.read(studentId)).thenReturn(Optional.of(student));
-        doThrow(new RuntimeException("Database error")).when(studentsDAO).delete(studentId);
-
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> studentService.deleteStudentById(studentId));
-        assertTrue(exception.getMessage().contains("Failed to delete student"));
-        verify(studentsDAO, times(1)).read(studentId);
-        verify(studentsDAO, times(1)).delete(studentId);
+        verify(studentRepository).save(s);
     }
     
     @Test
-    public void addStudentToCourse_shouldAddStudentToCourse_WhenValidInput() {
-        String studentName = "John";
-        String studentLastName = "Doe";
-        String courseName = "Math";
+    void addNewStudent_shouldThrow_whenFirstNameEmpty() {
+        Student s = new Student();
+        s.setFirstName("");
+        s.setLastName("B");
 
-        when(studentsDAO.getStudentIdByName(studentName, studentLastName)).thenReturn(1);
-        when(courseDAO.getCourseIdByName(courseName)).thenReturn(101);
-        when(courseDAO.isStudentEnrolled(1, 101)).thenReturn(false);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> studentService.addNewStudent(s));
 
-        studentService.addStudentToCourse(studentName, studentLastName, courseName);
-
-        verify(studentsDAO).addCourseToStudent(1, 101);
+        assertEquals("First and last name must not be empty", ex.getMessage());
+        verify(studentRepository, never()).save(any());
     }
     
     @Test
-    public void addStudentToCourse_shouldThrowException_WhenStudentNotFound() {
-        String studentName = "NonExistent";
-        String studentLastName = "Person";
-        String courseName = "Math";
+    void deleteStudentById_shouldDelete_whenFound() {
+        when(studentRepository.findById(1)).thenReturn(Optional.of(student));
 
-        when(studentsDAO.getStudentIdByName(studentName, studentLastName)).thenReturn(-1);
+        studentService.deleteStudentById(1);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> studentService.addStudentToCourse(studentName, studentLastName, courseName));
-
-        assertEquals("Student not found: NonExistent Person", exception.getMessage());
-        verify(studentsDAO, never()).addCourseToStudent(anyInt(), anyInt());
+        verify(studentRepository).delete(student);
     }
     
     @Test
-    public void addStudentToCourse_shouldThrowException_WhenCourseNotFound() {
-        String studentName = "John";
-        String studentLastName = "Doe";
-        String courseName = "NonExistentCourse";
+    void deleteStudentById_shouldThrow_whenNotFound() {
+        when(studentRepository.findById(2)).thenReturn(Optional.empty());
 
-        when(studentsDAO.getStudentIdByName(studentName, studentLastName)).thenReturn(1);
-        when(courseDAO.getCourseIdByName(courseName)).thenReturn(-1);
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> studentService.deleteStudentById(2));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> studentService.addStudentToCourse(studentName, studentLastName, courseName));
-
-        assertEquals("Course not found: NonExistentCourse", exception.getMessage());
-        verify(studentsDAO, never()).addCourseToStudent(anyInt(), anyInt());
+        assertEquals("Student not found with ID: 2", ex.getMessage());
+        verify(studentRepository, never()).delete(any());
     }
     
     @Test
-    public void addStudentToCourse_shouldThrowException_WhenStudentAlreadyEnrolled() {
-        String studentName = "John";
-        String studentLastName = "Doe";
-        String courseName = "Math";
+    void addStudentToCourse_shouldEnroll_whenHappyPath() {        
+        student.getCourses().clear();
+        when(studentRepository.findWithCoursesByFirstNameAndLastName("John", "Doe"))
+            .thenReturn(Optional.of(student));
+        when(courseRepository.findByName("Math"))
+            .thenReturn(Optional.of(course));
 
-        when(studentsDAO.getStudentIdByName(studentName, studentLastName)).thenReturn(1);
-        when(courseDAO.getCourseIdByName(courseName)).thenReturn(101);
-        when(courseDAO.isStudentEnrolled(1, 101)).thenReturn(true);
+        studentService.addStudentToCourse("John", "Doe", "Math");
 
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> studentService.addStudentToCourse(studentName, studentLastName, courseName));
-
-        assertEquals("The student is already enrolled in the course: Math", exception.getMessage());
-        verify(studentsDAO, never()).addCourseToStudent(anyInt(), anyInt());
+        assertTrue(student.getCourses().contains(course));
+        verify(studentRepository).save(student);
     }
-    
+
     @Test
-    public void removeStudentFromCourse_shouldThrowException_WhenStudentNotFound() {
-        when(studentsDAO.getStudentIdByName("John", "Doe")).thenReturn(-1);
+    void addStudentToCourse_shouldThrow_whenStudentNotFound() {
+        when(studentRepository.findWithCoursesByFirstNameAndLastName("X", "Y"))
+            .thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> 
-            studentService.removeStudentFromCourse("John", "Doe", "Math")
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> studentService.addStudentToCourse("X", "Y", "Math"));
 
-        assertEquals("Student not found: John Doe", exception.getMessage());
-        verify(studentsDAO, times(1)).getStudentIdByName("John", "Doe");
-        verifyNoMoreInteractions(courseDAO, studentsDAO);
+        assertEquals("Student not found", ex.getMessage());
+        verify(courseRepository, never()).findByName(any());
     }
-    
+
     @Test
-    public void removeStudentFromCourse_shouldThrowException_WhenCourseNotFound() {
-        when(studentsDAO.getStudentIdByName("John", "Doe")).thenReturn(1);
-        when(courseDAO.getCourseIdByName("Science")).thenReturn(-1);
+    void addStudentToCourse_shouldThrow_whenCourseNotFound() {
+        when(studentRepository.findWithCoursesByFirstNameAndLastName("John", "Doe"))
+            .thenReturn(Optional.of(student));
+        when(courseRepository.findByName("Sci"))
+            .thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> 
-            studentService.removeStudentFromCourse("John", "Doe", "Science")
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> studentService.addStudentToCourse("John", "Doe", "Sci"));
 
-        assertEquals("Course not found: Science", exception.getMessage());
-        verify(studentsDAO, times(1)).getStudentIdByName("John", "Doe");
-        verify(courseDAO, times(1)).getCourseIdByName("Science");
-        verifyNoMoreInteractions(courseDAO, studentsDAO);
+        assertEquals("Course not found", ex.getMessage());
     }
-    
+
     @Test
-    public void removeStudentFromCourse_shouldThrowException_WhenStudentNotEnrolled() {
-        when(studentsDAO.getStudentIdByName("John", "Doe")).thenReturn(1);
-        when(courseDAO.getCourseIdByName("Math")).thenReturn(101);
-        when(courseDAO.isStudentEnrolled(1, 101)).thenReturn(false);
+    void addStudentToCourse_shouldThrow_whenAlreadyEnrolled() {        
+        student.getCourses().add(course);
+        when(studentRepository.findWithCoursesByFirstNameAndLastName("John", "Doe"))
+            .thenReturn(Optional.of(student));
+        when(courseRepository.findByName("Math"))
+            .thenReturn(Optional.of(course));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> 
-            studentService.removeStudentFromCourse("John", "Doe", "Math")
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> studentService.addStudentToCourse("John", "Doe", "Math"));
 
-        assertEquals("The student is not enrolled in the specified course: Math", exception.getMessage());
-        verify(studentsDAO, times(1)).getStudentIdByName("John", "Doe");
-        verify(courseDAO, times(1)).getCourseIdByName("Math");
-        verify(courseDAO, times(1)).isStudentEnrolled(1, 101);
-        verifyNoMoreInteractions(courseDAO, studentsDAO);
+        assertEquals("Student already enrolled in course", ex.getMessage());
     }
-    
+
     @Test
-    public void removeStudentFromCourse_shouldRemoveStudent_WhenValidInput() {
-        when(studentsDAO.getStudentIdByName("John", "Doe")).thenReturn(1);
-        when(courseDAO.getCourseIdByName("Math")).thenReturn(101);
-        when(courseDAO.isStudentEnrolled(1, 101)).thenReturn(true);
+    void removeStudentFromCourse_shouldRemove_whenCoursePath() {        
+        student.getCourses().add(course);
+        when(studentRepository.findWithCoursesByFirstNameAndLastName("John", "Doe"))
+            .thenReturn(Optional.of(student));
+        when(courseRepository.findByName("Math"))
+            .thenReturn(Optional.of(course));
 
         studentService.removeStudentFromCourse("John", "Doe", "Math");
 
-        verify(studentsDAO, times(1)).getStudentIdByName("John", "Doe");
-        verify(courseDAO, times(1)).getCourseIdByName("Math");
-        verify(courseDAO, times(1)).isStudentEnrolled(1, 101);
-        verify(studentsDAO, times(1)).removeStudentFromCourse(1, 101);
+        assertFalse(student.getCourses().contains(course));
+        verify(studentRepository).save(student);
+    }
+
+    @Test
+    void removeStudentFromCourse_shouldThrow_whenStudentNotFound() {
+        when(studentRepository.findWithCoursesByFirstNameAndLastName("X", "Y"))
+            .thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> studentService.removeStudentFromCourse("X", "Y", "Math"));
+
+        assertEquals("Student not found", ex.getMessage());
+    }
+
+    @Test
+    void removeStudentFromCourse_shouldThrow_whenCourseNotFound() {
+        when(studentRepository.findWithCoursesByFirstNameAndLastName("John", "Doe"))
+            .thenReturn(Optional.of(student));
+        when(courseRepository.findByName("Sci"))
+           .thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> studentService.removeStudentFromCourse("John", "Doe", "Sci"));
+
+        assertEquals("Course not found", ex.getMessage());
+    }
+
+    @Test
+    void removeStudentFromCourse_shouldThrow_whenNotEnrolled() {        
+        student.getCourses().clear();
+        when(studentRepository.findWithCoursesByFirstNameAndLastName("John", "Doe"))
+            .thenReturn(Optional.of(student));
+        when(courseRepository.findByName("Math"))
+            .thenReturn(Optional.of(course));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> studentService.removeStudentFromCourse("John", "Doe", "Math"));
+
+        assertEquals("Student is not enrolled in course", ex.getMessage());
     }
     
 }

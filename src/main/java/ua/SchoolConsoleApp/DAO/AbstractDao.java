@@ -1,4 +1,4 @@
-package ua.SchoolConsoleApp.DAO;
+package ua.schoolconsoleapp.dao;
 
 import java.sql.SQLException;
 import org.springframework.beans.factory.annotation.Autowired;

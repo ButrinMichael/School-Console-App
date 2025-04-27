@@ -1,107 +1,103 @@
-package ua.SchoolConsoleApp.Services;
+package ua.schoolconsoleapp.services;
 
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import ua.SchoolConsoleApp.DAO.CourseDAO;
-import ua.SchoolConsoleApp.DAO.StudentsDAO;
-import ua.SchoolConsoleApp.Student;
-import java.util.List;
-import java.util.Optional;
-import java.util.ArrayList;
+import ua.schoolconsoleapp.models.Course;
+import ua.schoolconsoleapp.models.Student;
+import ua.schoolconsoleapp.repositories.CourseRepository;
+import ua.schoolconsoleapp.repositories.StudentRepository;
+import jakarta.transaction.Transactional;
+import java.util.*;
 
 @Service
 public class StudentServiceImpl implements StudentService {
 
-    private final CourseDAO courseDAO;
-    private final StudentsDAO studentsDAO;
+	private static final Logger logger = LoggerFactory.getLogger(StudentServiceImpl.class);
 
-    public StudentServiceImpl(CourseDAO courseDAO, StudentsDAO studentsDAO) {
-        this.courseDAO = courseDAO;
-        this.studentsDAO = studentsDAO;
-    }
+	private final StudentRepository studentRepository;
+	private final CourseRepository courseRepository;
 
-    @Override
-    public List<Student> findStudentsByCourseName(String courseName) {
-        List<Student> result = new ArrayList<>();
-        int courseId = courseDAO.getCourseIdByName(courseName);
+	public StudentServiceImpl(StudentRepository studentRepository, CourseRepository courseRepository) {
+		this.studentRepository = studentRepository;
+		this.courseRepository = courseRepository;
+	}
 
-        if (courseId == -1) {
-            return result; 
-        }
+	@Override
+	public List<Course> getCoursesByStudentName(String firstName, String lastName) {
+	    Student student = studentRepository.findWithCoursesByFirstNameAndLastName(firstName, lastName)
+	            .orElseThrow(() -> new RuntimeException("Student not found"));
+	    return new ArrayList<>(student.getCourses());
+	}
+	
+	@Override
+	public List<Student> findStudentsByCourseName(String courseName) {
+		logger.info("Finding students enrolled in course: {}", courseName);
+		return studentRepository.findStudentsByCourseName(courseName);
+	}
 
-        List<Student> students = studentsDAO.getStudentsByCourseName(courseName);
+	@Override
+	public void addNewStudent(Student student) {
+		logger.info("Adding new student: {} {}", student.getFirstName(), student.getLastName());
+		if (student.getFirstName().isEmpty() || student.getLastName().isEmpty()) {
+			throw new IllegalArgumentException("First and last name must not be empty");
+		}
+		studentRepository.save(student);
+	}
 
-        if (!students.isEmpty()) {
-            result.addAll(students);
-        }
+	@Override
+	@Transactional
+	public void deleteStudentById(int studentId) {
+		logger.info("Deleting student with ID: {}", studentId);
+		Optional<Student> studentOpt = studentRepository.findById(studentId);
+		studentOpt.ifPresentOrElse(student -> {
+			studentRepository.delete(student);
+			logger.info("Student {} {} successfully deleted.", student.getFirstName(), student.getLastName());
+		}, () -> {
+			throw new RuntimeException("Student not found with ID: " + studentId);
+		});
+	}
 
-        return result;
-    }
-    @Override
-    public void addNewStudent(Student student) {
-        if (student.getFirstName().isEmpty() || student.getLastName().isEmpty()) {
-            throw new IllegalArgumentException("Name or surname cannot be empty.");
-        }
-        studentsDAO.create(student);         
-    }
-    
-    @Override
-    public void deleteStudentById(int studentId) {
-        try {
-            Optional<Student> studentOpt = studentsDAO.read(studentId);
-            if (!studentOpt.isPresent()) {
-                throw new RuntimeException("Student with ID " + studentId + " does not exist.");
-            }
+	@Override
+	    @Transactional
+	    public void addStudentToCourse(String firstName, String lastName, String courseName) {
+	        logger.info("Adding student {} {} to course '{}'", firstName, lastName, courseName);
 
-            studentsDAO.delete(studentId);
+	        Student student = studentRepository.findWithCoursesByFirstNameAndLastName(firstName, lastName)
+	                .orElseThrow(() -> new RuntimeException("Student not found"));
 
-            Student student = studentOpt.get();
-            System.out.println("The student " + student.getFirstName() + " " + student.getLastName() +
-                    " has been successfully deleted.");
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Failed to delete student: " + e.getMessage(), e);
-        }
-    }
-    
-    @Override
-    public void addStudentToCourse(String studentName, String studentLastName, String courseName) {
-        int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
-        if (studentId == -1) {
-            throw new RuntimeException("Student not found: " + studentName + " " + studentLastName);
-        }
+	        Course course = courseRepository.findByName(courseName)
+	                .orElseThrow(() -> new RuntimeException("Course not found"));
 
-        int courseId = courseDAO.getCourseIdByName(courseName);
-        if (courseId == -1) {
-            throw new RuntimeException("Course not found: " + courseName);
-        }
+	        if (student.getCourses().contains(course)) {
+	            throw new RuntimeException("Student already enrolled in course");
+	        }
 
-        boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
-        if (isEnrolled) {
-            throw new RuntimeException("The student is already enrolled in the course: " + courseName);
-        }
+	        student.getCourses().add(course);
+	        course.getStudents().add(student);
+	        
+	        studentRepository.save(student);	        
+	    }
 
-        studentsDAO.addCourseToStudent(studentId, courseId);
-    }
-    
-    @Override
-    public void removeStudentFromCourse(String studentName, String studentLastName, String courseName) {
-        int studentId = studentsDAO.getStudentIdByName(studentName, studentLastName);
-        if (studentId == -1) {
-            throw new RuntimeException("Student not found: " + studentName + " " + studentLastName);
-        }
+	@Override
+	@Transactional
+	public void removeStudentFromCourse(String firstName, String lastName, String courseName) {
+		logger.info("Removing student {} {} from course '{}'", firstName, lastName, courseName);
 
-        int courseId = courseDAO.getCourseIdByName(courseName);
-        if (courseId == -1) {
-            throw new RuntimeException("Course not found: " + courseName);
-        }
+		Student student = studentRepository.findWithCoursesByFirstNameAndLastName(firstName, lastName)
+				.orElseThrow(() -> new RuntimeException("Student not found"));
 
-        boolean isEnrolled = courseDAO.isStudentEnrolled(studentId, courseId);
-        if (!isEnrolled) {
-            throw new RuntimeException("The student is not enrolled in the specified course: " + courseName);
-        }
+		Course course = courseRepository.findByName(courseName)
+				.orElseThrow(() -> new RuntimeException("Course not found"));
 
-        studentsDAO.removeStudentFromCourse(studentId, courseId);
-    }
+		if (!student.getCourses().contains(course)) {
+			throw new RuntimeException("Student is not enrolled in course");
+		}
 
-  }
+		student.getCourses().remove(course);
+		course.getStudents().remove(student);
 
+		 studentRepository.save(student);
+	}
+
+}
