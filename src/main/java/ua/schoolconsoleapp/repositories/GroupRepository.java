@@ -13,6 +13,6 @@ public interface GroupRepository extends JpaRepository<Group, Integer> {
 
     Optional<Group> findByName(String name);
 
-    @Query("SELECT g FROM Group g LEFT JOIN g.students s GROUP BY g.id HAVING COUNT(s) <= :maxStudents")
+    @Query("SELECT g FROM Group g JOIN g.students s GROUP BY g.id HAVING COUNT(s) <= :maxStudents")
     List<Group> findGroupsWithLessOrEqualStudents(long maxStudents);
 }
