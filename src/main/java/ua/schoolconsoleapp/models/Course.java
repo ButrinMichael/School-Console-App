@@ -13,7 +13,11 @@ public class Course {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "course_id")
+<<<<<<< HEAD
+	private Integer id;
+=======
 	private int id;
+>>>>>>> refs/remotes/origin/main
 
 	@Column(name = "course_name", nullable = false, unique = true)
 	private String name;
