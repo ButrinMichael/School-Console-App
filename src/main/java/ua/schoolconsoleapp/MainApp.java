@@ -2,38 +2,87 @@ package ua.schoolconsoleapp;
 
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 //!!!!!
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+<<<<<<< HEAD
 
+=======
+import ua.schoolconsoleapp.dao.JPACourseDAO;
+import ua.schoolconsoleapp.dao.JPAStudentDAO;
+>>>>>>> refs/remotes/origin/main
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.models.Student;
+<<<<<<< HEAD
 import ua.schoolconsoleapp.services.CourseService;
+=======
+>>>>>>> refs/remotes/origin/main
 import ua.schoolconsoleapp.services.GroupService;
 import ua.schoolconsoleapp.services.StudentService;
 import ua.schoolconsoleapp.utils.DBInitializer;
 
+<<<<<<< HEAD
 @SpringBootApplication(scanBasePackages = "ua.schoolconsoleapp")
+=======
+@SpringBootApplication(scanBasePackages = "ua.SchoolConsoleApp")
+>>>>>>> refs/remotes/origin/main
 public class MainApp implements CommandLineRunner {
 
     private static final Scanner scanner = new Scanner(System.in);
 
     @Autowired
+<<<<<<< HEAD
     private StudentService studentService;
+=======
+    private JPAStudentDAO studentsDAO;
+>>>>>>> refs/remotes/origin/main
 
     @Autowired
+<<<<<<< HEAD
     private GroupService groupService;
     
     @Autowired
     private CourseService courseService;
+=======
+    private JPACourseDAO courseDAO;
+>>>>>>> refs/remotes/origin/main
 
     @Autowired
+<<<<<<< HEAD
     private DBInitializer dbInitializer;
+=======
+    private StudentService studentService;
+>>>>>>> refs/remotes/origin/main
 
+<<<<<<< HEAD
+    public static void main(String[] args) {
+        SpringApplication.run(MainApp.class, args);
+    }
+=======
+    @Autowired
+    private GroupService groupService;
+>>>>>>> refs/remotes/origin/main
+
+<<<<<<< HEAD
+    @Override
+    public void run(String... args) {
+        // dbInitializer.initializeDatabase();
+        showMenu();
+        closeScanner();
+        System.exit(0);
+    }
+=======
+    @Autowired
+    private DBInitializer dbInitializer;
+>>>>>>> refs/remotes/origin/main
+
+<<<<<<< HEAD
+=======
     public static void main(String[] args) {
         SpringApplication.run(MainApp.class, args);
     }
@@ -46,6 +95,7 @@ public class MainApp implements CommandLineRunner {
         System.exit(0);
     }
 
+>>>>>>> refs/remotes/origin/main
     public void findGroupsWithLessOrEqualStudents() {
         int maxStudents = -1;
 
@@ -148,7 +198,11 @@ public class MainApp implements CommandLineRunner {
             System.out.println("Enter the student's surname:");
             String studentLastName = scanner.nextLine().trim();
 
+<<<<<<< HEAD
             List<Course> courses = courseService.getAllCourses();
+=======
+            List<Course> courses = courseDAO.getAll();
+>>>>>>> refs/remotes/origin/main
             if (courses.isEmpty()) {
                 System.out.println("Course list is empty.");
                 return;
@@ -173,12 +227,30 @@ public class MainApp implements CommandLineRunner {
         try {
             System.out.println("Enter the student's name:");
             String studentName = scanner.nextLine().trim();
+<<<<<<< HEAD
+=======
+            System.out.println("Enter the student's surname:");
+            String studentLastName = scanner.nextLine().trim();
+>>>>>>> refs/remotes/origin/main
 
+<<<<<<< HEAD
             System.out.println("Enter the student's surname:");
             String studentLastName = scanner.nextLine().trim();
             
             List<Course> enrolledCourses = studentService.getCoursesByStudentName(studentName, studentLastName);
+=======
+            Optional<Student> studentOpt = studentsDAO.findByNameAndLastName(studentName, studentLastName);
+            if (studentOpt.isEmpty()) {
+                System.out.println("Error: Student not found: " + studentName + " " + studentLastName);
+                return;
+            }
+            Student student = studentOpt.get();
+>>>>>>> refs/remotes/origin/main
 
+<<<<<<< HEAD
+=======
+            List<Course> enrolledCourses = courseDAO.getCoursesByStudentId(student.getId());
+>>>>>>> refs/remotes/origin/main
             if (enrolledCourses.isEmpty()) {
                 System.out.println("The student is not enrolled in any course.");
                 return;
@@ -206,7 +278,10 @@ public class MainApp implements CommandLineRunner {
         }
     }
 
+<<<<<<< HEAD
     
+=======
+>>>>>>> refs/remotes/origin/main
     private void showMenu() {
         boolean showMenuUntilTrue = true;
         while (showMenuUntilTrue) {
