@@ -9,315 +9,247 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-<<<<<<< HEAD
 
-=======
-import ua.schoolconsoleapp.dao.JPACourseDAO;
-import ua.schoolconsoleapp.dao.JPAStudentDAO;
->>>>>>> refs/remotes/origin/main
 import ua.schoolconsoleapp.models.Course;
 import ua.schoolconsoleapp.models.Group;
 import ua.schoolconsoleapp.models.Student;
-<<<<<<< HEAD
+
 import ua.schoolconsoleapp.services.CourseService;
-=======
->>>>>>> refs/remotes/origin/main
+
 import ua.schoolconsoleapp.services.GroupService;
 import ua.schoolconsoleapp.services.StudentService;
 import ua.schoolconsoleapp.utils.DBInitializer;
 
-<<<<<<< HEAD
 @SpringBootApplication(scanBasePackages = "ua.schoolconsoleapp")
-=======
-@SpringBootApplication(scanBasePackages = "ua.SchoolConsoleApp")
->>>>>>> refs/remotes/origin/main
+
 public class MainApp implements CommandLineRunner {
 
-    private static final Scanner scanner = new Scanner(System.in);
+	private static final Scanner scanner = new Scanner(System.in);
 
-    @Autowired
-<<<<<<< HEAD
-    private StudentService studentService;
-=======
-    private JPAStudentDAO studentsDAO;
->>>>>>> refs/remotes/origin/main
+	@Autowired
 
-    @Autowired
-<<<<<<< HEAD
-    private GroupService groupService;
-    
-    @Autowired
-    private CourseService courseService;
-=======
-    private JPACourseDAO courseDAO;
->>>>>>> refs/remotes/origin/main
+	private StudentService studentService;
 
-    @Autowired
-<<<<<<< HEAD
-    private DBInitializer dbInitializer;
-=======
-    private StudentService studentService;
->>>>>>> refs/remotes/origin/main
+	@Autowired
 
-<<<<<<< HEAD
-    public static void main(String[] args) {
-        SpringApplication.run(MainApp.class, args);
-    }
-=======
-    @Autowired
-    private GroupService groupService;
->>>>>>> refs/remotes/origin/main
+	private GroupService groupService;
 
-<<<<<<< HEAD
-    @Override
-    public void run(String... args) {
-        // dbInitializer.initializeDatabase();
-        showMenu();
-        closeScanner();
-        System.exit(0);
-    }
-=======
-    @Autowired
-    private DBInitializer dbInitializer;
->>>>>>> refs/remotes/origin/main
+	@Autowired
+	private CourseService courseService;
 
-<<<<<<< HEAD
-=======
-    public static void main(String[] args) {
-        SpringApplication.run(MainApp.class, args);
-    }
+	@Autowired
 
-    @Override
-    public void run(String... args) {
-        // dbInitializer.initializeDatabase();
-        showMenu();
-        closeScanner();
-        System.exit(0);
-    }
+	private DBInitializer dbInitializer;
 
->>>>>>> refs/remotes/origin/main
-    public void findGroupsWithLessOrEqualStudents() {
-        int maxStudents = -1;
+	public static void main(String[] args) {
+		SpringApplication.run(MainApp.class, args);
+	}
 
-        while (maxStudents == -1) {
-            System.out.println("Enter the maximum number of students:");
-            try {
-                maxStudents = scanner.nextInt();
-            } catch (InputMismatchException e) {
-                System.err.println("Invalid input. Please enter a valid integer.");
-                scanner.nextLine();
-            }
-        }
+	@Override
+	public void run(String... args) {
+		// dbInitializer.initializeDatabase();
+		showMenu();
+		closeScanner();
+		System.exit(0);
+	}
 
-        try {
-            List<Group> groups = groupService.findGroupsWithLessOrEqualStudents(maxStudents);
-            if (groups.isEmpty()) {
-                System.out.println("Groups not found.");
-            } else {
-                System.out.println("Groups with number of students less than or equal to " + maxStudents + ":");
-                for (Group group : groups) {
-                    System.out.println(group);
-                }
-            }
-        } catch (RuntimeException e) {
-            System.err.println("Error: " + e.getMessage());
-        }
-    }
+	public void findGroupsWithLessOrEqualStudents() {
+		int maxStudents = -1;
 
-    public void findStudentsByCourseName() {
-        System.out.println("Enter the name of the course:");
-        String courseName = scanner.nextLine().trim();
+		while (maxStudents == -1) {
+			System.out.println("Enter the maximum number of students:");
+			try {
+				maxStudents = scanner.nextInt();
+			} catch (InputMismatchException e) {
+				System.err.println("Invalid input. Please enter a valid integer.");
+				scanner.nextLine();
+			}
+		}
 
-        try {
-            List<Student> students = studentService.findStudentsByCourseName(courseName);
+		try {
+			List<Group> groups = groupService.findGroupsWithLessOrEqualStudents(maxStudents);
+			if (groups.isEmpty()) {
+				System.out.println("Groups not found.");
+			} else {
+				System.out.println("Groups with number of students less than or equal to " + maxStudents + ":");
+				for (Group group : groups) {
+					System.out.println(group);
+				}
+			}
+		} catch (RuntimeException e) {
+			System.err.println("Error: " + e.getMessage());
+		}
+	}
 
-            if (students.isEmpty()) {
-                System.out.println("Students associated with the course \"" + courseName + "\" were not found.");
-            } else {
-                System.out.println("Students associated with the course \"" + courseName + "\":");
-                for (Student student : students) {
-                    System.out.println(student.getFirstName() + " " + student.getLastName());
-                }
-            }
-        } catch (RuntimeException e) {
-            System.err.println("An error occurred while finding students by course name: " + e.getMessage());
-        }
-    }
+	public void findStudentsByCourseName() {
+		System.out.println("Enter the name of the course:");
+		String courseName = scanner.nextLine().trim();
 
-    public void addNewStudent() {
-        System.out.println("Enter the student's name:");
-        String firstName = scanner.nextLine();
-        if (firstName.isEmpty()) {
-            System.out.println("Name cannot be empty.");
-            return;
-        }
-        System.out.println("Enter the student's surname:");
-        String lastName = scanner.nextLine();
-        if (lastName.isEmpty()) {
-            System.out.println("Surname cannot be empty.");
-            return;
-        }
-        Student student = new Student(firstName, lastName);
+		try {
+			List<Student> students = studentService.findStudentsByCourseName(courseName);
 
-        try {
-            studentService.addNewStudent(student);
-            System.out.println("The student has been successfully added.");
-        } catch (IllegalArgumentException e) {
-            System.err.println("Error: " + e.getMessage());
-        } catch (RuntimeException e) {
-            System.err.println("Failed to add student: " + e.getMessage());
-        }
-    }
+			if (students.isEmpty()) {
+				System.out.println("Students associated with the course \"" + courseName + "\" were not found.");
+			} else {
+				System.out.println("Students associated with the course \"" + courseName + "\":");
+				for (Student student : students) {
+					System.out.println(student.getFirstName() + " " + student.getLastName());
+				}
+			}
+		} catch (RuntimeException e) {
+			System.err.println("An error occurred while finding students by course name: " + e.getMessage());
+		}
+	}
 
-    public void deleteStudent() {
-        int studentId = -1;
-        while (studentId == -1) {
-            System.out.println("Enter the student ID for deletion:");
-            try {
-                studentId = scanner.nextInt();
-                scanner.nextLine();
-            } catch (InputMismatchException e) {
-                System.err.println("Invalid input. Please enter a valid integer ID.");
-                scanner.nextLine();
-                return;
-            }
-        }
+	public void addNewStudent() {
+		System.out.println("Enter the student's name:");
+		String firstName = scanner.nextLine();
+		if (firstName.isEmpty()) {
+			System.out.println("Name cannot be empty.");
+			return;
+		}
+		System.out.println("Enter the student's surname:");
+		String lastName = scanner.nextLine();
+		if (lastName.isEmpty()) {
+			System.out.println("Surname cannot be empty.");
+			return;
+		}
+		Student student = new Student(firstName, lastName);
 
-        try {
-            studentService.deleteStudentById(studentId);
-            System.out.println("Student successfully deleted.");
-        } catch (RuntimeException e) {
-            System.err.println("Failed to delete student: " + e.getMessage());
-        }
-    }
+		try {
+			studentService.addNewStudent(student);
+			System.out.println("The student has been successfully added.");
+		} catch (IllegalArgumentException e) {
+			System.err.println("Error: " + e.getMessage());
+		} catch (RuntimeException e) {
+			System.err.println("Failed to add student: " + e.getMessage());
+		}
+	}
 
-    public void addStudentToCourse() {
-        try {
-            System.out.println("Enter the student's name:");
-            String studentName = scanner.nextLine().trim();
-            System.out.println("Enter the student's surname:");
-            String studentLastName = scanner.nextLine().trim();
+	public void deleteStudent() {
+		int studentId = -1;
+		while (studentId == -1) {
+			System.out.println("Enter the student ID for deletion:");
+			try {
+				studentId = scanner.nextInt();
+				scanner.nextLine();
+			} catch (InputMismatchException e) {
+				System.err.println("Invalid input. Please enter a valid integer ID.");
+				scanner.nextLine();
+				return;
+			}
+		}
 
-<<<<<<< HEAD
-            List<Course> courses = courseService.getAllCourses();
-=======
-            List<Course> courses = courseDAO.getAll();
->>>>>>> refs/remotes/origin/main
-            if (courses.isEmpty()) {
-                System.out.println("Course list is empty.");
-                return;
-            }
+		try {
+			studentService.deleteStudentById(studentId);
+			System.out.println("Student successfully deleted.");
+		} catch (RuntimeException e) {
+			System.err.println("Failed to delete student: " + e.getMessage());
+		}
+	}
 
-            System.out.println("Enter the name of the course from the list:");
-            for (Course course : courses) {
-                System.out.println(course.getName());
-            }
+	public void addStudentToCourse() {
+		try {
+			System.out.println("Enter the student's name:");
+			String studentName = scanner.nextLine().trim();
+			System.out.println("Enter the student's surname:");
+			String studentLastName = scanner.nextLine().trim();
 
-            String courseName = scanner.nextLine().trim();
+			List<Course> courses = courseService.getAllCourses();
 
-            studentService.addStudentToCourse(studentName, studentLastName, courseName);
+			if (courses.isEmpty()) {
+				System.out.println("Course list is empty.");
+				return;
+			}
 
-            System.out.println("The student has been successfully added to the course!");
-        } catch (RuntimeException e) {
-            System.out.println("Error: " + e.getMessage());
-        }
-    }
+			System.out.println("Enter the name of the course from the list:");
+			for (Course course : courses) {
+				System.out.println(course.getName());
+			}
 
-    public void removeStudentFromCourse() {
-        try {
-            System.out.println("Enter the student's name:");
-            String studentName = scanner.nextLine().trim();
-<<<<<<< HEAD
-=======
-            System.out.println("Enter the student's surname:");
-            String studentLastName = scanner.nextLine().trim();
->>>>>>> refs/remotes/origin/main
+			String courseName = scanner.nextLine().trim();
 
-<<<<<<< HEAD
-            System.out.println("Enter the student's surname:");
-            String studentLastName = scanner.nextLine().trim();
-            
-            List<Course> enrolledCourses = studentService.getCoursesByStudentName(studentName, studentLastName);
-=======
-            Optional<Student> studentOpt = studentsDAO.findByNameAndLastName(studentName, studentLastName);
-            if (studentOpt.isEmpty()) {
-                System.out.println("Error: Student not found: " + studentName + " " + studentLastName);
-                return;
-            }
-            Student student = studentOpt.get();
->>>>>>> refs/remotes/origin/main
+			studentService.addStudentToCourse(studentName, studentLastName, courseName);
 
-<<<<<<< HEAD
-=======
-            List<Course> enrolledCourses = courseDAO.getCoursesByStudentId(student.getId());
->>>>>>> refs/remotes/origin/main
-            if (enrolledCourses.isEmpty()) {
-                System.out.println("The student is not enrolled in any course.");
-                return;
-            }
+			System.out.println("The student has been successfully added to the course!");
+		} catch (RuntimeException e) {
+			System.out.println("Error: " + e.getMessage());
+		}
+	}
 
-            System.out.println("The student is enrolled in the following courses:");
-            for (Course course : enrolledCourses) {
-                System.out.println(course.getName());
-            }
+	public void removeStudentFromCourse() {
+		try {
+			System.out.println("Enter the student's name:");
+			String studentName = scanner.nextLine().trim();
 
-            System.out.println("Enter the name of the course to remove from the list:");
-            String courseName = scanner.nextLine().trim();
+			System.out.println("Enter the student's surname:");
+			String studentLastName = scanner.nextLine().trim();
 
-            studentService.removeStudentFromCourse(studentName, studentLastName, courseName);
+			List<Course> enrolledCourses = studentService.getCoursesByStudentName(studentName, studentLastName);
 
-            System.out.println("The student has been successfully removed from the course!");
-        } catch (RuntimeException e) {
-            System.out.println("Error: " + e.getMessage());
-        }
-    }
+			if (enrolledCourses.isEmpty()) {
+				System.out.println("The student is not enrolled in any course.");
+				return;
+			}
 
-    private static void closeScanner() {
-        if (scanner != null) {
-            scanner.close();
-        }
-    }
+			System.out.println("The student is enrolled in the following courses:");
+			for (Course course : enrolledCourses) {
+				System.out.println(course.getName());
+			}
 
-<<<<<<< HEAD
-    
-=======
->>>>>>> refs/remotes/origin/main
-    private void showMenu() {
-        boolean showMenuUntilTrue = true;
-        while (showMenuUntilTrue) {
-            System.out.println("Please select an action:");
-            System.out.println("1. Find all groups with less or equal students’ number");
-            System.out.println("2. Find all students related to the course with the given name");
-            System.out.println("3. Add a new student");
-            System.out.println("4. Delete a student by the STUDENT_ID");
-            System.out.println("5. Add a student to the course (from a list)");
-            System.out.println("6. Remove the student from one of their courses.");
-            System.out.println("7. EXIT");
+			System.out.println("Enter the name of the course to remove from the list:");
+			String courseName = scanner.nextLine().trim();
 
-            int choice = scanner.nextInt();
-            scanner.nextLine();
-            switch (choice) {
-                case 1 -> findGroupsWithLessOrEqualStudents();
-                case 2 -> findStudentsByCourseName();
-                case 3 -> addNewStudent();
-                case 4 -> deleteStudent();
-                case 5 -> addStudentToCourse();
-                case 6 -> removeStudentFromCourse();
-                case 7 -> {
-                    System.out.println("Goodbye");
-                    closeScanner();
-                    System.exit(0);
-                }
-                default -> System.out.println("Invalid choice");
-            }
+			studentService.removeStudentFromCourse(studentName, studentLastName, courseName);
 
-            System.out.println("Press 1 to continue or 2 to Exit");
-            int choice2 = scanner.nextInt();
-            scanner.nextLine();
-            if (choice2 != 1) {
-                System.out.println("Goodbye");
-                showMenuUntilTrue = false;
-            }
-        }
-    }
+			System.out.println("The student has been successfully removed from the course!");
+		} catch (RuntimeException e) {
+			System.out.println("Error: " + e.getMessage());
+		}
+	}
+
+	private static void closeScanner() {
+		if (scanner != null) {
+			scanner.close();
+		}
+	}
+
+	private void showMenu() {
+		boolean showMenuUntilTrue = true;
+		while (showMenuUntilTrue) {
+			System.out.println("Please select an action:");
+			System.out.println("1. Find all groups with less or equal students’ number");
+			System.out.println("2. Find all students related to the course with the given name");
+			System.out.println("3. Add a new student");
+			System.out.println("4. Delete a student by the STUDENT_ID");
+			System.out.println("5. Add a student to the course (from a list)");
+			System.out.println("6. Remove the student from one of their courses.");
+			System.out.println("7. EXIT");
+
+			int choice = scanner.nextInt();
+			scanner.nextLine();
+			switch (choice) {
+			case 1 -> findGroupsWithLessOrEqualStudents();
+			case 2 -> findStudentsByCourseName();
+			case 3 -> addNewStudent();
+			case 4 -> deleteStudent();
+			case 5 -> addStudentToCourse();
+			case 6 -> removeStudentFromCourse();
+			case 7 -> {
+				System.out.println("Goodbye");
+				closeScanner();
+				System.exit(0);
+			}
+			default -> System.out.println("Invalid choice");
+			}
+
+			System.out.println("Press 1 to continue or 2 to Exit");
+			int choice2 = scanner.nextInt();
+			scanner.nextLine();
+			if (choice2 != 1) {
+				System.out.println("Goodbye");
+				showMenuUntilTrue = false;
+			}
+		}
+	}
 }
